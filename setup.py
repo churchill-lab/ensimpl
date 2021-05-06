@@ -18,7 +18,7 @@ on_rtd = os.environ.get('READTHEDOCS', None)
 
 if not on_rtd:
     requirements.append('Flask==1.1.1')
-    requirements.append('Flask-Cors==3.0.8')
+    requirements.append('Flask-Cors==3.0.9')
     requirements.append('Flask-Compress==1.4.0')
     requirements.append('gunicorn==19.9.0')
     requirements.append('PyMySQL==0.9.3')
