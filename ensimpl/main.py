@@ -1,122 +1,136 @@
-# -*- coding: utf-8 -*-
 import os
 
-from flask import Flask
-from flask import render_template
-from flask import url_for
+from fastapi import FastAPI
+from fastapi import Request
+from fastapi import status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+# from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from ensimpl.fastapi_utils import GZipCompressionMiddleware
+from ensimpl.routers import api
+
+import ensimpl.db.dbs as dbs
+
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'templates')
+templates = Jinja2Templates(directory=template_dir)
+
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+
+# TODO: maybe a factory
+# figure out config and what all the options do
+app = FastAPI(
+    title='Ensimpl',
+    description='Quicker Ensembl',
+    version='1.0.0',
+    root_path=os.environ.get('ROOT_PATH'))
+
+app.mount('/static', StaticFiles(directory=static_dir), name='static')
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request,
+                                       exc: RequestValidationError):
+    for h in request.headers:
+        print(h, request.headers[h])
 
-import ensimpl.db_config as db_config
-
-#from ensimpl.extensions import debug_toolbar
-#from ensimpl.extensions import Swagger
-from ensimpl.extensions import compress
-from ensimpl.modules.api.views import api
-from ensimpl.modules.page.views import page
-from ensimpl.utils import ReverseProxied
-
-
-def create_app(settings_override=None):
-    """Create a Flask application using the app factory pattern.
-
-    Args:
-        settings_override (dict): A ``dict`` which will override the default
-            settings.
-
-    Returns:
-        flask.Flask: The Flask application object.
-    """
-    app = Flask(__name__)
-
-    app.config.from_object('config.settings')
-
-    if app.config.from_envvar('ENSIMPL_SETTINGS', silent=True):
-        env_settings = os.environ['ENSIMPL_SETTINGS']
-        app.logger.info(f'Using ENSIMPL_SETTINGS: {env_settings}')
-
-    if settings_override:
-        app.logger.info('Overriding settings with parameters')
-        app.config.update(settings_override)
-
-    app.logger.debug(app.config)
-
-    db_config.init()
-
-    app.logger.setLevel(app.config['LOG_LEVEL'])
-
-    middleware(app)
-
-    app.register_blueprint(api)
-    app.register_blueprint(page)
-
-    extensions(app)
-    error_templates(app)
-
-    return app
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({'detail': exc.errors(), 'body': exc.body}),
+    )
 
 
-def extensions(app):
-    """Register 0 or more extensions (mutates the app passed in).
+origins = ["*"]
 
-    Args:
-        app (flask.Flask): The Flask application object.
-    """
-    #debug_toolbar.init_app(app)
-    compress.init_app(app)
-    #Swagger(app)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# this is added because starlette does not support compression_level in GZip
+# they do in 0.15, but fastapi doesn't require that version yet
+app.add_middleware(
+    GZipCompressionMiddleware,
+    minimum_size=1000,
+    compression_level=3
+)
 
-
-    return None
-
-
-def middleware(app):
-    """Register 0 or more middleware (mutates app that is passed in).
-
-    Args:
-        app (flask.Flask): The Flask application object.
-    """
-    app.wsgi_app = ReverseProxied(app.wsgi_app)
-
-    return None
+app.include_router(api.router)
 
 
-def error_templates(app):
-    """Register 0 or more custom error pages (mutates the app passed in).
-
-    Args:
-        app (flask.Flask): The Flask application object.
-    """
-
-    def render_status(status):
-        """Render a custom template for a specific status.
-           Source: http://stackoverflow.com/a/30108946
-
-        Args:
-            status (werkzeug.exceptions.NotFound): The exception class.
-         """
-        # Get the status code from the status, default to a 500 so that we
-        # catch all types of errors and treat them as a 500.
-        code = getattr(status, 'code', 500)
-        redirect_url = url_for('page.index')
-
-        # for specific error pages, you could create an errors/404.html or an
-        # errors/500.html and than do something like the following
-        #
-        # return render_template('errors/{0}.html'.format(code),
-        #                        redirect_url=redirect_url), code
-
-        return render_template('errors/error.html',
-                               error_code=code,
-                               redirect_url=redirect_url), code
-
-    for error in [404, 500]:
-        app.errorhandler(error)(render_status)
-
-    return None
+@app.on_event('startup')
+async def startup():
+    ensimpl_dbs, ensimpl_dbs_dict = dbs.init()
+    app.state.dbs = ensimpl_dbs
+    app.state.dbs_dict = ensimpl_dbs_dict
+    app.state.url_prefix = os.environ.get('URL_PREFIX')
 
 
-if __name__ == '__main__':
-    print('For debugging only......')
-    create_app().run()
+@app.get('/', response_class=HTMLResponse)
+async def index_html(request: Request):
+    return templates.TemplateResponse('index.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/ping')
+async def ping_json():
+    return {'ping': 'ok'}
+
+
+@app.get('/search', response_class=HTMLResponse)
+async def search_html(request: Request):
+    return templates.TemplateResponse('search.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/navigator', response_class=HTMLResponse)
+async def navigator_html(request: Request):
+    return templates.TemplateResponse('navigator.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/lookup', response_class=HTMLResponse)
+async def lookup_html(request: Request):
+    return templates.TemplateResponse('lookup.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/external_ids', response_class=HTMLResponse)
+async def external_ids_html(request: Request):
+    return templates.TemplateResponse('external_ids.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/history', response_class=HTMLResponse)
+async def history_html(request: Request):
+    return templates.TemplateResponse('history.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/help', response_class=HTMLResponse)
+async def help_html(request: Request):
+    return templates.TemplateResponse('help.html',
+                                      {'request': request, 'app': app})
+
+
+@app.get('/js/karyotype.js', response_class=HTMLResponse)
+async def karyotype_js(request: Request):
+    return templates.TemplateResponse('karyotype.js',
+                                      {'request': request, 'app': app},
+                                      media_type='application/javascript')
+
+
+@app.get('/js/ensimpl.js', response_class=HTMLResponse)
+async def ensimpl_js(request: Request):
+    return templates.TemplateResponse('ensimpl.js',
+                                      {'request': request, 'app': app},
+                                      media_type='application/javascript')
