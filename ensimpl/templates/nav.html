@@ -1,0 +1,33 @@
+<nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top">
+    <a class="navbar-brand" href="{{ app.state.url_prefix }}/">ensimpl</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <!-- ml-auto will push all links to RIGHT //-->
+        <!-- mr-auto will push all links to LEFT //-->
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/search" class="pl-5"><i class="fab fa-searchengin"></i> Search</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/navigator" class="pl-5"><i class="far fa-compass"></i> Navigator</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/lookup" class="pl-5"><i class="far fa-list-alt"></i> Lookup</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/external_ids" class="pl-5"><i class="fas fa-exchange-alt"></i> External IDs</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/history" class="pl-5"><i class="fas fa-landmark"></i> History</a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ app.state.url_prefix }}/help" class="pl-5"><i class="fas fa-question-circle"></i> Help</a>
+            </li>
+        </ul>
+    </div>
+  </nav>
+  
+  

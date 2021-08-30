@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}ensimpl{% endblock %}
+
+{% block head %}
+<link rel="stylesheet"
+      href="//cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+
+<link rel="stylesheet"
+      href="//cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
+{% endblock %}
+
+{% block body %}
+
+{% include 'nav.html' %}
+
+<div class="container-fluid">
+
+    <h1>ensimpl</h1>
+    <p class="lead">The ensimpl API was built by <a href="//churchill-lab.jax.org">The Churchill Lab</a> to simplify annotating various data from <a href="//www.ensembl.org">Ensembl</a>.</p>
+
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+
+{% endblock %}

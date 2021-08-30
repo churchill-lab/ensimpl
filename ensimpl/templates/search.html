@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+
+{% block title %}ensimpl API{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+
+ {% include 'nav.html' %}
+
+<div class="container-fluid">
+
+    <h1>ensimpl Search</h1>
+    <p class="lead">Basic search utilizing the ensimpl API.</p>
+
+
+    <div class="row">
+        <div class="col">
+
+            <div class="row h-100">
+                <div class="col">
+
+                    <div class="card bg-light h-100">
+                        <div class="card-header font-weight-bold">ensimpl Input</div>
+                        <div class="card-body">
+                            <div class="form-group row">
+                                <label for="selectSpecies" class="col-4 col-form-label">Species</label>
+                                <div class="col-8">
+                                    <select class="form-control  form-control-sm" id="selectSpecies">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="selectRelease" class="col-4 col-form-label">Release</label>
+                                <div class="col-8">
+                                    <select class="form-control  form-control-sm" id="selectRelease">
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="fields" class="col-4 col-form-label">Term</label>
+                                <div class="col-8">
+                                    <input type="text" id="searchTerm" class="form-control form-control-sm"/>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+                        <div class="card-footer text-muted">
+                            <span class="input-group-btn">
+                                <button class="btn btn-secondary" id="btnGo" type="button">Go!</button>
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col">
+
+                    <div class="row h-100">
+                        <div class="col">
+
+                            <div class="card bg-light h-100">
+                                <div class="card-header font-weight-bold">Download Settings</div>
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <label for="emptystring" class="col-4 col-form-label">Empty String</label>
+                                        <div class="col-8">
+                                            <select class="form-control  form-control-sm" id="emptystring">
+                                                <option value="" selected>"" (Empty String)</option>
+                                                <option value="NA">NA</option>
+                                                <option value="None">None</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                            <div class="form-group row">
+                                <label for="fields" class="col-4 col-form-label">Output Fields</label>
+                                <div class="col-8">
+
+                                    <!--
+
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="checkbox" value="input_id" id="column_input_id">
+                                      <label class="form-check-label" for="column_input_id">
+                                        Input ID
+                                      </label>
+                                    </div>
+                                    //-->
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="gene_id" id="column_gene_id">
+                                        <label class="form-check-label" for="column_gene_id">
+                                            Gene ID
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="symbol" id="column_gene_symbol">
+                                        <label class="form-check-label" for="column_gene_symbol">
+                                            Gene Symbol
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="description" id="column_gene_description">
+                                        <label class="form-check-label" for="column_gene_description">
+                                            Gene Description
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="location" id="column_gene_location">
+                                        <label class="form-check-label" for="column_gene_location">
+                                            Gene Location
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="strand" id="column_gene_strand">
+                                        <label class="form-check-label" for="column_gene_strand">
+                                            Gene Strand
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" value="synonyms" id="column_gene_synonyms">
+                                        <label class="form-check-label" for="column_gene_synonyms">
+                                            Gene Synonyms
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" value="external_ids" id="column_external_ids">
+                                        <label class="form-check-label" for="column_external_ids">
+                                            External ID
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" value="homolog_ids" id="column_homolog_ids">
+                                        <label class="form-check-label" for="column_homolog_ids">
+                                            Homolog IDs
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="match_reason" id="column_match_reason">
+                                        <label class="form-check-label" for="column_match_reason">
+                                            Match Reason
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="match_value" id="column_match_value">
+                                        <label class="form-check-label" for="column_match_value">
+                                            Match Value
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                                </div>
+
+                                <div class="card-footer text-muted">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-secondary" id="btnDL" type="button">Download</button>
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+
+            </div>
+
+
+
+
+        </div>
+
+
+    </div>
+
+    <br/>
+
+                    <div class="row">
+                        <div class="col">
+
+
+                            <div id="searchStatus"></div>
+                            <div id="searchTable"></div>
+                        </div>
+                    </div>
+
+
+
+</div>
+
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script src="{{ app.state.url_prefix }}/js/ensimpl.js"></script>
+
+<script>
+    <!--
+    function nvl(val, def) {
+        if (val === '') {
+            return def;
+        }
+
+        return val;
+    }
+
+    /**
+     * Perform Ensimpl search.
+     */
+    function findGene() {
+        let searchVal = $("#searchTerm").val().trim().toUpperCase();
+        let release = $("#selectRelease").val();
+        let species = $("#selectSpecies").val();
+
+        $("#tblBody").html('');
+
+        if (searchVal.length === 0) {
+            return;
+        }
+
+        let options = {
+            release: release,
+            species: species,
+            limit: 100
+        };
+
+        let selectionsTemp = $('[id^="column_"]');
+        let selections = [];
+
+        $.each(selectionsTemp, function(idx, elem) {
+              if ($(elem).is(':checked')) {
+                  selections.push(elem);
+              }
+        });
+
+        if (selections.length === 0) {
+            return;
+        }
+
+        $('#dl').hide();
+        window.SEARCHRESULTS = {};
+
+        window.ENSIMPL.search(searchVal, options, function (data) {
+            console.log('data=', data);
+
+            window.SEARCHRESULTS = data || {};
+            let numGenes = 0;
+
+
+            let h = '<table class="table table-striped"><thead><tr>';
+            let defaultValue = $('#emptystring').val();
+
+
+            $.each(selections, function(idx, elem) {
+
+                if (elem.value === 'gene_id') {
+                    h += '<th class="" scope="col">Gene ID</th>';
+                } else if (elem.value === 'symbol') {
+                    h += '<th class="" scope="col">Symbol</th>';
+                } else if (elem.value === 'description') {
+                    h += '<th class="" scope="col">Description</th>';
+                } else if (elem.value === 'location') {
+                    h += '<th class="" scope="col">Location</th>';
+                } else if (elem.value === 'strand') {
+                    h += '<th class="" scope="col">Strand</th>';
+                } else if (elem.value === 'synonyms') {
+                    h += '<th class="" scope="col">Synonyms</th>';
+                } else if (elem.value === 'external_ids') {
+                    h += '<th class="" scope="col">External ID</th>';
+                } else if (elem.value === 'homolog_ids') {
+                    h += '<th class="" scope="col">Homolog IDs</th>';
+                } else if (elem.value === 'match_reason') {
+                    h += '<th class="" scope="col">Match Reason</th>';
+                } else if (elem.value === 'match_value') {
+                    h += '<th class="" scope="col">Match Value</th>';
+                }
+            });
+
+            h += '</tr></thead><tbody id="tblBody"></tbody></table>';
+
+            $('#searchTable').html(h);
+
+            $.each(window.SEARCHRESULTS.result.matches, function(idx, elem) {
+
+                if (numGenes < 100) {
+                    let h2 = '';
+                    //console.log(lookup);
+
+                            //let elem = data.ids[lookup] || {};
+
+                            $.each(selections, function(idx2, elem2) {
+
+                                if (elem2.value === 'gene_id') {
+                                    if ('ensembl_gene_id' in elem) {
+                                        h2 += '<td>' + nvl(elem.ensembl_gene_id, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'symbol') {
+                                    if ('symbol' in elem) {
+                                        h2 += '<td>' + nvl(elem.symbol, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'description') {
+                                    if ('name' in elem) {
+                                        h2 += '<td>' + nvl(elem.name, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'location') {
+                                    if (('chromosome' in elem) && ('position_start' in elem) && ('position_end' in elem)) {
+                                        h2 += '<td>' + elem.chromosome + ':' + elem.position_start + '-' + elem.position_end + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+
+                                } else if (elem2.value === 'strand') {
+                                    if ('strand' in elem) {
+                                        h2 += '<td>' + nvl(elem.strand, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'synonyms') {
+                                    if ('synonyms' in elem) {
+                                        let synonyms = elem['synonyms'].join(':');
+                                        h2 += '<td>' + nvl(synonyms, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'external_ids') {
+                                    if ('external_ids' in elem) {
+                                        let external_ids = null;
+
+                                        $.each(elem.external_ids, function(i, e) {
+                                            if ((e['db'] === 'MGI') || (e['db'] === 'HGNC')) {
+                                                external_ids = e['db_id'];
+                                            }
+                                        });
+
+                                        h2 += '<td>' + nvl(external_ids, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'homolog_ids') {
+                                    if ('homolog_ids' in elem) {
+                                        let homolog_ids = [];
+
+                                        $.each(elem.homolog_ids, function(i, e) {
+                                            homolog_ids.push(e['homolog_id'] + ':' + e['homolog_symbol']);
+                                        });
+
+                                        let homologs = homolog_ids.join('<br>');
+
+                                        h2 += '<td>' + nvl(homologs, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'match_reason') {
+                                    if ('match_reason' in elem) {
+                                        h2 += '<td>' + nvl(elem.match_reason, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'match_value') {
+                                    if ('match_value' in elem) {
+                                        h2 += '<td>' + nvl(elem.match_value, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                }
+
+                        });
+                        $("#tblBody").append('<tr>' + h2 + '</tr>');
+                        numGenes++;
+
+                        }
+
+                    });
+
+                let message = '';
+
+                if (window.SEARCHRESULTS.result.num_results === 0) {
+                    message += 'No matches found';
+                    $('#dl').hide();
+                } else if (window.SEARCHRESULTS.result.num_results === 1) {
+                    message += '1 match found';
+                    $('#dl').show();
+                } else if (window.SEARCHRESULTS.result.num_results > 100) {
+                    message += window.SEARCHRESULTS.result.num_results + ' matches found, displaying first 100';
+                    $('#dl').show();
+                } else {
+                    message += window.SEARCHRESULTS.result.num_results + ' matches found';
+                    $('#dl').show();
+                }
+
+
+                $("#searchStatus").html(message);
+
+
+
+
+
+
+        });
+    }
+
+        function getDateString() {
+        let date = new Date();
+        let year = date.getFullYear();
+        let month = `${date.getMonth() + 1}`.padStart(2, '0');
+        let day =`${date.getDate()}`.padStart(2, '0');
+        //let hours = today.getHours();
+        //let minutes = today.getMinutes();
+        //let seconds = today.getSeconds();
+        return `${month}_${day}_${year}`
+    }
+
+
+       $('#btnDL').button().on('click', function (evt) {
+            evt.preventDefault();
+
+            let defaultValue = $('#emptystring').val();
+            let header = [];
+            let selectionsTemp = $('[id^="column_"]');
+            let selections = [];
+
+            $.each(selectionsTemp, function(idx, elem) {
+                  if ($(elem).is(':checked')) {
+                      selections.push(elem);
+                  }
+            });
+
+            if (selections.length === 0) {
+                return;
+            }
+
+            $.each(selections, function(idx, elem) {
+                if (elem.value === 'gene_id') {
+                    header.push('"Gene ID"');
+                } else if (elem.value === 'symbol') {
+                    header.push('"Gene Symbol"');
+                } else if (elem.value === 'description') {
+                    header.push('"Gene Description"');
+                } else if (elem.value === 'location') {
+                    header.push('"Gene Chromosome"');
+                    header.push('"Gene Start"');
+                    header.push('"Gene End"');
+                } else if (elem.value === 'strand') {
+                    header.push('"Gene Strand"');
+                } else if (elem.value === 'synonyms') {
+                    header.push('"Gene Synonyms"');
+                } else if (elem.value === 'external_ids') {
+                    header.push('"External ID"');
+                } else if (elem.value === 'homolog_ids') {
+                    header.push('"Homolog IDs"');
+                } else if (elem.value === 'match_reason') {
+                    header.push('"Match Reason"');
+                } else if (elem.value === 'match_value') {
+                    header.push('"Match Value"');
+                }
+            });
+
+            let data = header.join("\t") + '\n';
+
+
+            $.each(window.SEARCHRESULTS.result.matches, function(idx, elem) {
+
+
+                    //console.log(elem);
+
+                    let val = [];
+
+                    $.each(selections, function(idx2, elem2) {
+
+                        if (elem2.value === 'gene_id') {
+                            if ('ensembl_gene_id' in elem) {
+                                val.push('"' + nvl(elem.ensembl_gene_id, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'symbol') {
+                            if ('symbol' in elem) {
+                                val.push('"' + nvl(elem.symbol, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'description') {
+                            if ('name' in elem) {
+                                val.push('"' + nvl(elem.name, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'location') {
+                            if (('chromosome' in elem) && ('position_start' in elem) && ('position_end' in elem)) {
+                                val.push('"' + elem.chromosome + '"');
+                                val.push(elem.position_start);
+                                val.push(elem.position_end);
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'strand') {
+                            if ('strand' in elem) {
+                                val.push('"' + nvl(elem.strand, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'synonyms') {
+                            if ('synonyms' in elem) {
+                                val.push('"' + nvl(elem.synonyms.join(':'), defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'external_ids') {
+                            if ('external_ids' in elem) {
+                                let external_ids = null;
+
+                                $.each(elem.external_ids, function(i, e) {
+                                    if ((e['db'] === 'MGI') || (e['db'] === 'HGNC')) {
+                                        external_ids = e['db_id'];
+                                    }
+                                });
+
+                                val.push('"' + nvl(external_ids, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'homolog_ids') {
+                            if ('homolog_ids' in elem) {
+                                let homolog_ids = [];
+
+                                $.each(elem.homolog_ids, function(i, e) {
+                                    homolog_ids.push(e['homolog_id'] + ':' + e['homolog_symbol']);
+                                });
+
+                                let homologs = homolog_ids.join('/');
+
+                                val.push('"' + nvl(homologs, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'match_reason') {
+                            if ('match_reason' in elem) {
+                                val.push('"' + nvl(elem.match_reason, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        } else if (elem2.value === 'match_value') {
+                            if ('match_value' in elem) {
+                                val.push('"' + nvl(elem.match_value, defaultValue) + '"');
+                            } else {
+                                val.push('"' + defaultValue + '"');
+                            }
+                        }
+                    });
+
+                    data += (val.join('\t') + '\n');
+
+            });
+
+            let fileName = "ensimpl_search_" + $("#selectVersion").val() + "_" + getDateString() + ".tsv";
+
+
+            saveAs(new Blob([data]), fileName);
+            return false;
+        });
+
+    $().ready(function () {
+        $("#dl").hide();
+
+        window.ENSIMPL = new ensimpl();
+
+        window.ENSIMPL.releases(function(data) {
+            window.ENSIMPL_RELEASES = {};
+            let species = {};
+
+            $.each(data, function(idx, elem) {
+                window.ENSIMPL_RELEASES[elem['release']] = elem;
+                species[elem['species']] = elem['species'];
+            });
+
+            let vals = Object.values(window.ENSIMPL_RELEASES);
+            vals.sort().reverse();
+
+            $.each(vals, function(key, val) {
+                $("#selectRelease").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
+            });
+
+
+           $.each(species, function(key, val) {
+               $("#selectSpecies").append('<option value="' + key + '">' + val + '</option>')
+           });
+
+            $('#selectSpecies').val('Mm');
+
+
+        });
+
+        $('#searchTerm').keypress(function (evt) {
+            let code = evt.which ? evt.which : evt.keyCode;
+            if (code === 13) {
+                $(this).blur();
+                $('#btnGo').focus().click();
+            }
+        });
+
+        $('#btnGo').button().on('click', function (evt) {
+            evt.preventDefault();
+            findGene();
+            console.log('findGene');
+            return false;
+        });
+    });
+    //-->
+</script>
+
+{% endblock %}
