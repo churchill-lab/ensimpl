@@ -1,6 +1,32 @@
-.git
+# Docker stuff
 .dockerignore
-*.db3
+Dockerfile
+
+# ignore .git directory
+.git
+.gitignore
+
+# ignore the data directory
 data
-new_data
-*.ipynb
+
+# ignore the tmp directory
+data
+
+# ignore any db3 files
+**/*.db3
+
+# ignore any ipynb and py files
+**/*.ipynb
+**/*.ipynb_checkpoints
+**/*.db
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*__pycache__
+
+# eggs
+**/*.egg-info
+
+# extra
+README.md
+DEV.md

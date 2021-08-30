@@ -10,7 +10,6 @@ LOG = utils.get_logger()
 
 
 EXTERNAL_DATABASES = {
-    'EntrezGene': {'id': 'ZG', 'display': 'NCBI gene'},
     'HGNC': {'id': 'HG', 'display': 'HGNC Symbol'},
     'MGI': {'id': 'MI', 'display': 'MGI Symbol'},
     'Uniprot_gn': {'id': 'UG', 'display': 'UniProtKB Gene'}

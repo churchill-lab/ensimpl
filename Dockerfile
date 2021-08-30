@@ -1,19 +1,10 @@
-FROM python:3.7.3-slim
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 LABEL maintainer="Matthew Vincent <mattjvincent@gmail.com>" \
-	  version="1.0"
-
-RUN apt-get update && \
-    apt-get -y install gcc
-
-ENV INSTALL_PATH /app/ensimpl
-RUN mkdir -p $INSTALL_PATH
-
-WORKDIR $INSTALL_PATH
+	  version="1.0.0"
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
-COPY . .
-RUN pip install --editable .
+COPY ./ensimpl /app/ensimpl
 
-CMD gunicorn -c "python:config.gunicorn" ensimpl.app:create_app
+
