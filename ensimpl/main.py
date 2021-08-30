@@ -72,7 +72,9 @@ async def startup():
     ensimpl_dbs, ensimpl_dbs_dict = dbs.init()
     app.state.dbs = ensimpl_dbs
     app.state.dbs_dict = ensimpl_dbs_dict
-    app.state.url_prefix = os.environ.get('URL_PREFIX')
+    app.state.url_prefix = ''
+    if os.environ.get('URL_PREFIX') is not None:
+        app.state.url_prefix = os.environ.get('URL_PREFIX')
 
 
 @app.get('/', response_class=HTMLResponse)
