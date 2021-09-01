@@ -778,6 +778,7 @@ async def randomids(request: Request, response: Response,
 @router.get("/exon_info")
 async def exon_info(request: Request, response: Response,
                     release: str, species: str,
+                    chrom: Optional[str] = None,
                     compress: Optional[bool] = False):
     """
 
@@ -787,7 +788,7 @@ async def exon_info(request: Request, response: Response,
     try:
         db = dbs.get_database(release, species, request.app.state.dbs_dict)
         ret['meta'] = meta.db_meta(db)
-        ret['genes'] = genesdb.get_exon_info(db, compress)
+        ret['genes'] = genesdb.get_exon_info(db, chrom, compress)
     except Exception as e:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {'message': str(e)}

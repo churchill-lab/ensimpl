@@ -229,7 +229,10 @@ SQL_EXON_INFO = '''
            chromosomes c
      WHERE g.ensembl_id = gtpe.gene_id 
        AND gtpe.seqid = c.chromosome
-       AND gtpe.type_key not in ("ET", "EP") 
+       AND gtpe.type_key not in ('ET', 'EP')
+'''
+
+SQL_EXON_INFO_ORDER_BY = '''
      ORDER BY c.chromosome_num, 
            g.start_position, 
            gtpe.gene_id, 
@@ -705,11 +708,11 @@ def compute_union(exonStarts, exonEnds):
     for t in edges:
         if height == 0:
             start = t[0]
-        
+
         height += t[1]
         if height == 0:
             intervals.append((start, t[0]))
-    
+
     return intervals
 
 
@@ -727,8 +730,8 @@ def run_length_encode(reference, intervals):
         delta = t[1] - reference
         deltas.append(delta)
         reference = reference + delta
-    
-    return deltas 
+
+    return deltas
 
 
 def split_exons(exonString):
@@ -740,24 +743,26 @@ def find_gene(genes, symbol, txStart, txEnd):
     A handful of genes have isoforms that have disjoint intervals!
 
     chr1	175603795	175628524	Ifi208	64	+	NM_001162938	100033459	protein-coding	interferon activated gene 208	175607816	175627598	175603795,175607808,175609060,175612795,175620797,175625702,175627535,	175604097,175608093,175609167,175613749,175620865,175626000,175628524,
-    chr1	175603795	175610463	Ifi208	64	+	NM_001379481	100033459	protein-coding	interferon activated gene 208	175607816	175609756	175603795,175607808,175609060,175609531,	175604097,175608093,175609167,175610463,        
+    chr1	175603795	175610463	Ifi208	64	+	NM_001379481	100033459	protein-coding	interferon activated gene 208	175607816	175609756	175603795,175607808,175609060,175609531,	175604097,175608093,175609167,175610463,
     '''
     if symbol in genes:
         for gene in genes[symbol]:
             if gene['txEnd'] >= txStart and gene['txStart'] <= txEnd:
                 return gene
-    
+
     return None
 
 
-def get_exon_info(db, compress=False):
+def get_exon_info(db, chrom=None, compress=False):
     """Get homology information.
 
     Args:
         db (str): The Ensimpl database.
+        chrom (str): Chromosome specific, None for all
+        compress (bool): compress dict to list
 
     Returns:
-        list: A ``list`` of ``dicts`` representing homology data.
+        list: A ``list`` of ``dicts`` representing gene data and exons.
 
     Raises:
         Exception: When sqlite error or other error occurs.
@@ -765,16 +770,21 @@ def get_exon_info(db, compress=False):
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    
-    sql_query = SQL_EXON_INFO
+
+    if chrom is not None:
+        sql_where = f' AND gtpe.seqid = "{chrom}" '
+    else:
+        sql_where = ''
+
+    sql_query = f'{SQL_EXON_INFO} {sql_where} {SQL_EXON_INFO_ORDER_BY}'
 
     genes = {}
 
     for row in cursor.execute(sql_query, {}):
-            
+
         txStart = int(row['start'])
         txEnd = int(row['end'])
-        
+
         if row['type_key'] == 'EG':
 
             ensembl_id = row['ensembl_id']
@@ -791,7 +801,7 @@ def get_exon_info(db, compress=False):
             }
         else:
             gene = genes[ensembl_id]
-            
+
             gene['exonStarts'].append(txStart)
             gene['exonEnds'].append(txEnd)
 
@@ -810,6 +820,7 @@ def get_exon_info(db, compress=False):
                 gene['id'],
                 gene['symbol'],
                 gene['chr'],
+                gene['txStart'],
                 gene['txEnd'] - gene['txStart'],
                 gene['strand'],
                 exons
@@ -824,6 +835,7 @@ def get_exon_info(db, compress=False):
                 'id': gene['id'],
                 'symbol': gene['symbol'],
                 'chr': gene['chr'],
+                'start': gene['txStart'],
                 'length': gene['txEnd'] - gene['txStart'],
                 'strand': gene['strand'],
                 'exons': exons
