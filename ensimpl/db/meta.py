@@ -1,5 +1,6 @@
-# -*- coding: utf_8 -*-
 from collections import OrderedDict
+from typing import Dict
+from typing import List
 import sqlite3
 
 from ensimpl import utils
@@ -8,17 +9,14 @@ from ensimpl.db import dbs
 LOG = utils.get_logger()
 
 
-def chromosomes(db):
+def chromosomes(db: str) -> List:
     """Get the chromosomes.
 
     Args:
-        db (str): The Ensimpl database.
+        db: The Ensimpl database.
 
     Returns:
-        list: A ``list`` of ``dicts`` with the following keys:
-            * chromosome
-            * length
-            * order
+        A list of dicts.
 
     """
     sql_statement = 'SELECT * FROM chromosomes ORDER BY chromosome_num '
@@ -42,22 +40,14 @@ def chromosomes(db):
     return chroms
 
 
-def karyotypes(db):
+def karyotypes(db: str) -> List:
     """Get the karyotypes.
 
     Args:
-        db (str): The Ensimpl database.
+        db: The Ensimpl database.
 
     Returns:
-        list: A ``list`` element with a ``dict`` with the following keys:
-            * chromosome
-            * length
-            * order
-            * karyotypes
-                * seq_region_start
-                * seq_region_end
-                * band
-                * stain
+        A list of dicts.
     """
     sql_statement = '''
         SELECT * 
@@ -94,19 +84,15 @@ def karyotypes(db):
     # turn into a list
     return list(karyotype_data.values())
 
-def db_meta(db):
+
+def db_meta(db: str) -> Dict:
     """Get the database meta information..
 
     Args:
-        db (str): The Ensimpl database.
+        db: The Ensimpl database.
 
     Returns:
-        dict: A ``dict`` with the following keys:
-            * assembly
-            * assembly_patch
-            * species
-            * release
-            * url (if available)
+        A dict of meta informtion about the database.
     """
     sql_meta = '''
         SELECT distinct meta_key meta_key, meta_value, species_id
@@ -131,19 +117,15 @@ def db_meta(db):
 
     return meta_data
 
-def stats(db):
+
+def stats(db: str) -> Dict:
     """Get information for the version.
 
     Args:
-        db (str): The Ensimpl database.
+        db: The Ensimpl database.
 
     Returns:
-        dict: A ``dict`` with the following keys:
-            * assembly
-            * assembly_patch
-            * species
-            * stats - informational counts about the database
-            * version
+        A dictionary with statistics about the database.
     """
     sql_lookup_stats = '''
         SELECT count(egl.lookup_value) num, sr.description 
@@ -157,28 +139,25 @@ def stats(db):
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    stats = {}
+    statistics = {}
 
     for row in cursor.execute(sql_lookup_stats):
-        stats[row['description']] = row['num']
+        statistics[row['description']] = row['num']
 
     cursor.close()
     conn.close()
 
-    return stats
+    return statistics
 
 
-def external_dbs(db):
+def external_dbs(db: str) -> List:
     """Get the external databases.
 
     Args:
         db (str): The Ensimpl database.
 
     Returns:
-        list: A ``list`` of ``dicts`` with the following keys:
-            * external_db_id
-            * external_db_name
-            * ranking_id
+        A list of dictionary elements with external names.
 
     """
     sql_statement = 'SELECT * FROM external_dbs ORDER BY external_db_key '

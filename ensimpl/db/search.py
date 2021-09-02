@@ -1,4 +1,6 @@
-# -*- coding: utf_8 -*-
+from typing import Dict
+from typing import List
+from typing import Optional
 import sqlite3
 import re
 
@@ -66,11 +68,12 @@ SELECT *
        AS int), e.start_position, e.end_position
 '''
 
-QUERIES = {}
-QUERIES['SQL_TERM_EXACT'] = SQL_TERM_EXACT
-QUERIES['SQL_TERM_LIKE'] = SQL_TERM_LIKE
-QUERIES['SQL_ID'] = SQL_ID
-QUERIES['SQL_REGION'] = SQL_REGION
+QUERIES = {
+    'SQL_TERM_EXACT':  SQL_TERM_EXACT,
+    'SQL_TERM_LIKE': SQL_TERM_LIKE,
+    'SQL_ID': SQL_ID,
+    'SQL_REGION': SQL_REGION
+}
 
 
 class SearchException(Exception):
@@ -81,12 +84,13 @@ class SearchException(Exception):
 class Query:
     """Encapsulate query objects.
     """
-    def __init__(self, term=None, exact=False):
+    def __init__(self, term: Optional[str] = None,
+                 exact: Optional[bool] = False):
         """Initialization.
 
         Args:
-            term (str, optional): The search term.
-            exact (bool, optional): ``True`` for exact match of `term`.
+            term: The search term.
+            exact: True for exact match of `term`.
         """
         self.term = term
         self.exact = exact
@@ -173,13 +177,16 @@ class Match:
 class Result:
     """Simple class to encapsulate a Query and matches
     """
-    def __init__(self, query=None, matches=None, num_results=None):
+    def __init__(self,
+                 query: Optional[Query] = None,
+                 matches: Optional[List[Match]] = None,
+                 num_results: Optional[int] = None):
         """Constructor.
 
         Args:
-            query (Query, optional): The ``Query`` object.
-            matches (list, optional): ``list`` of ``Match`` objects.
-            num_results (int, optional): The maximum number of matches.
+            query: The Query object.
+            matches: A list of Matches.
+            num_results: The maximum number of matches.
         """
         self.query = query
         self.matches = matches
@@ -187,12 +194,12 @@ class Result:
         self.num_results = num_results
 
 
-def get_query(term, exact=True):
+def get_query(term: str, exact: Optional[bool] = True) -> Query:
     """Get query based upon parameters
 
     Args:
-        term (str): The search term.
-        exact (bool, optional): ``True`` for exact match of `term`.
+        term: The search term.
+        exact: True for exact match.
 
     Returns:
         Query: The query.
@@ -233,7 +240,7 @@ def get_query(term, exact=True):
     return query
 
 
-def execute_query(db, query, limit=None):
+def execute_query(db: str, query: Query, limit: Optional[int] = None) -> Result:
     """Execute the SQL query.
 
     Args:
@@ -333,17 +340,19 @@ def execute_query(db, query, limit=None):
     return Result(query, matches, num_matches)
 
 
-def search(db, term, exact=True, limit=None):
+def search(db: str, term: str,
+           exact: Optional[bool] = True,
+           limit: Optional[int] = None) -> Optional[Dict]:
     """Perform the search.
 
     Args:
-        db (str): The Ensembl database.
-        term (str): The search term.
-        exact (bool, optional): ``True`` for exact match of `term`.
-        limit (int, optional): Maximum number to return, ``None`` for all.
+        db: The Ensembl database.
+        term: The search term.
+        exact: True for exact match of `term`.
+        limit: Maximum number to return, None for all.
 
     Returns:
-        :obj:`Result`: The result of the query.
+        The result of the query.
     """
     try:
         query = get_query(term, exact)

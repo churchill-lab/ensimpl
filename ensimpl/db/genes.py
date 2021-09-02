@@ -1,7 +1,8 @@
-# -*- coding: utf_8 -*-
 import sqlite3
-
 from collections import OrderedDict
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from ensimpl.db import dbs
 from ensimpl.db import meta
@@ -240,16 +241,17 @@ SQL_EXON_INFO_ORDER_BY = '''
 '''
 
 
-def get_ids(db, ids=None, source_db='Ensembl'):
+def get_ids(db: str, ids: Optional[List[str]] = None,
+            source_db: Optional[str] = 'Ensembl') -> Dict:
     """Get all ids for identifiers.
 
     Args:
-        db (str): The Ensimpl database.
-        ids (list): A ``list`` of ``str`` which are Ensembl identifiers.
-        source_db (str): A valid source_db.
+        db: The Ensimpl database.
+        ids: A list of Ensembl identifiers.
+        source_db: A valid source_db.
 
     Returns:
-        list: A ``list`` of ``dicts`` representing identifiers.
+        A dict of identifiers.
 
     Raises:
         Exception: When sqlite error or other error occurs.
@@ -288,7 +290,6 @@ def get_ids(db, ids=None, source_db='Ensembl'):
                 sql_query = SQL_IDS_FILTERED
                 sql_query = sql_query.format(in_values, source_db)
 
-
         #
         # execute the query
         #
@@ -316,15 +317,15 @@ def get_ids(db, ids=None, source_db='Ensembl'):
     return results
 
 
-def get_homology(db, ids=None):
+def get_homology(db: str, ids: Optional[List[str]] = None) -> Dict:
     """Get homology information.
 
     Args:
-        db (str): The Ensimpl database.
-        ids (list): A ``list`` of ``str`` which are Ensembl identifiers.
+        db: The Ensimpl database.
+        ids: A list of Ensembl identifiers.
 
     Returns:
-        list: A ``list`` of ``dicts`` representing homology data.
+        A dict of homology information.
 
     Raises:
         Exception: When sqlite error or other error occurs.
@@ -363,7 +364,7 @@ def get_homology(db, ids=None):
             if not gene:
                 gene = []
 
-            gene.append(utils.dictify_row(cursor,row))
+            gene.append(utils.dictify_row(cursor, row))
 
             results[gene_id] = gene
 
@@ -376,20 +377,21 @@ def get_homology(db, ids=None):
     return results
 
 
-def get(db, ids=None, order='id', details=False):
+def get(db: str, ids: Optional[List[str]] = None, order: Optional[str] = 'id',
+        details: Optional[bool] = False) -> Dict:
     """
     Get genes matching the ids.
 
     Args:
-        db (str): The Ensimpl database.
-        ids (list): A ``list`` of ``str`` which are Ensembl identifiers.
-        order (str): Order by 'id' or 'position'.
-        details (bool): True to retrieve all information including transcripts,
+        db: The Ensimpl database.
+        ids: A list of Ensembl identifiers.
+        order: Order by 'id' or 'position'.
+        details: True to retrieve all information including transcripts,
             exons, proteins.  False will only retrieve the top level gene
             information.
 
     Returns:
-        list: A ``list`` of ``dicts`` representing genes.
+        A list of dicts representing genes.
 
         Each match object will contain:
 
@@ -624,19 +626,17 @@ def get(db, ids=None, order='id', details=False):
     return results
 
 
-def random_ids(db, source_db='Ensembl', limit=10):
+def random_ids(db: str, source_db: Optional[str] = 'Ensembl',
+               limit: Optional[int] = 10):
     """Get random ids.
 
     Args:
-        db (str): The Ensimpl database.
-        source_db (str): source database identifier
-        limit (int): Number of ids to return
+        db: The Ensimpl database.
+        source_db: source database identifier
+        limit: Number of ids to return
 
     Returns:
-        list: A ``list`` of ``dicts`` with the following keys:
-            * chromosome
-            * length
-            * order
+        A list of Ensembl IDs (str)
 
     """
     valid_db_ids = ['Ensembl', 'Ensembl_homolog']
@@ -668,18 +668,19 @@ def random_ids(db, source_db='Ensembl', limit=10):
     return ids
 
 
-def get_history(databases, ensembl_id, details=False):
+def get_history(databases: List[str], ensembl_id: str,
+                details: Optional[bool] = False):
     """Get a genes history.
 
     Args:
-        databases (list[str]): The Ensimpl databases.
-        ensembl_id (str): The Ensembl identifier.
-        details (bool): True to retrieve all information including transcripts,
+        databases: The Ensimpl databases.
+        ensembl_id: The Ensembl identifier.
+        details: True to retrieve all information including transcripts,
             exons, proteins.  False will only retrieve the top level gene
             information. Not yet implemented.
 
     Returns:
-        list: A ``list`` of ``dicts`` representing genes.
+        list: A dictionary of database details.
 
     Raises:
         Exception: When sqlite error or other error occurs.
@@ -689,7 +690,8 @@ def get_history(databases, ensembl_id, details=False):
     try:
         for database in databases:
             rs = dbs.get_release_species(database)
-            results[str(rs['release'])] = get(database, [ensembl_id], details)
+            print(rs)
+            results[rs['release']] = get(database, [ensembl_id], details)
 
     except ValueError as e:
         LOG.debug(e)
@@ -697,9 +699,9 @@ def get_history(databases, ensembl_id, details=False):
     return results
 
 
-def compute_union(exonStarts, exonEnds):
-    edges = [(x, 1) for x in exonStarts] + [(x, -1) for x in exonEnds]
-    edges.sort(key=lambda t: t[0])
+def compute_union(exon_starts: List[int], exon_ends: List[int]) -> List:
+    edges = [(x, 1) for x in exon_starts] + [(x, -1) for x in exon_ends]
+    edges.sort(key=lambda pos: pos[0])
 
     intervals = []
     height = 0
@@ -716,10 +718,10 @@ def compute_union(exonStarts, exonEnds):
     return intervals
 
 
-def run_length_encode(reference, intervals):
-    '''
+def run_length_encode(reference: int, intervals: List[int]) -> List[int]:
+    """
     Returns alternating exon and gap lengths.
-    '''
+    """
     deltas = []
 
     for t in intervals:
@@ -734,32 +736,18 @@ def run_length_encode(reference, intervals):
     return deltas
 
 
-def split_exons(exonString):
-    return [int(x) for x in exonString.split(",") if x != '']
+def split_exons(exon_string: str) -> List[int]:
+    return [int(x) for x in exon_string.split(',') if x != '']
 
 
-def find_gene(genes, symbol, txStart, txEnd):
-    '''
-    A handful of genes have isoforms that have disjoint intervals!
-
-    chr1	175603795	175628524	Ifi208	64	+	NM_001162938	100033459	protein-coding	interferon activated gene 208	175607816	175627598	175603795,175607808,175609060,175612795,175620797,175625702,175627535,	175604097,175608093,175609167,175613749,175620865,175626000,175628524,
-    chr1	175603795	175610463	Ifi208	64	+	NM_001379481	100033459	protein-coding	interferon activated gene 208	175607816	175609756	175603795,175607808,175609060,175609531,	175604097,175608093,175609167,175610463,
-    '''
-    if symbol in genes:
-        for gene in genes[symbol]:
-            if gene['txEnd'] >= txStart and gene['txStart'] <= txEnd:
-                return gene
-
-    return None
-
-
-def get_exon_info(db, chrom=None, compress=False):
+def get_exon_info(db: str, chrom: Optional[str] = None,
+                  compress: Optional[bool] = False) -> List:
     """Get homology information.
 
     Args:
-        db (str): The Ensimpl database.
-        chrom (str): Chromosome specific, None for all
-        compress (bool): compress dict to list
+        db: The Ensimpl database.
+        chrom: Chromosome specific, None for all
+        compress: compress dict to list
 
     Returns:
         list: A ``list`` of ``dicts`` representing gene data and exons.
@@ -782,8 +770,8 @@ def get_exon_info(db, chrom=None, compress=False):
 
     for row in cursor.execute(sql_query, {}):
 
-        txStart = int(row['start'])
-        txEnd = int(row['end'])
+        tx_start = int(row['start'])
+        tx_end = int(row['end'])
 
         if row['type_key'] == 'EG':
 
@@ -793,8 +781,8 @@ def get_exon_info(db, chrom=None, compress=False):
                 'id': ensembl_id,
                 'symbol': row['ensembl_symbol'],
                 'chr': row['seqid'],
-                'txStart': txStart,
-                'txEnd': txEnd,
+                'txStart': tx_start,
+                'txEnd': tx_end,
                 'strand': row['strand'],
                 'exonStarts': [],
                 'exonEnds': [],
@@ -802,8 +790,8 @@ def get_exon_info(db, chrom=None, compress=False):
         else:
             gene = genes[ensembl_id]
 
-            gene['exonStarts'].append(txStart)
-            gene['exonEnds'].append(txEnd)
+            gene['exonStarts'].append(tx_start)
+            gene['exonEnds'].append(tx_end)
 
     cursor.close()
     conn.close()

@@ -18,6 +18,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from fastapi.responses import ORJSONResponse
 from fastapi.responses import UJSONResponse
+from natsort import natsorted
 from pydantic import BaseModel
 
 # local imports
@@ -26,7 +27,6 @@ from ensimpl.db import dbs
 from ensimpl.db import genes as genesdb
 from ensimpl.db import meta
 from ensimpl.db import search as searchdb
-
 
 router = APIRouter(
     prefix="/api",
@@ -81,9 +81,9 @@ class CustomJSONResponse(JSONResponse):
 
 
 def go_fast(f):
-    """Skips FastAPI's slow `jsonable_encoder` and `serialize_response` and converts
-    content not wrapped in a response into a ORJSONResponse w/ custom datetime
-    serialization
+    """Skips FastAPI's slow `jsonable_encoder` and `serialize_response` and
+    converts content not wrapped in a response into a ORJSONResponse w/ custom
+    datetime serialization
     """
 
     @wraps(f)
@@ -123,7 +123,7 @@ async def releases(request: Request, response: Response):
 
     try:
         for database in request.app.state.dbs:
-            db = dbs.get_database(database['release'], database['species'], 
+            db = dbs.get_database(database['release'], database['species'],
                                   request.app.state.dbs_dict)
             ret.append(meta.db_meta(db))
     except Exception as e:
@@ -236,7 +236,7 @@ async def karyotypes(request: Request, response: Response,
         return {'message': str(e)}
 
     return CustomORJSONResponse(ret)
-    
+
 
 @router.get("/gene/{ensembl_id}")
 async def gene(request: Request, response: Response,
@@ -324,7 +324,7 @@ async def gene(request: Request, response: Response,
 
 class GQ(BaseModel):
     release: str
-    species: str              
+    species: str
     ids: List[str]
     details: Optional[bool] = False
 
@@ -334,7 +334,7 @@ async def genes_model(request: Request, response: Response, gq: GQ):
     ret = {}
 
     try:
-        db = dbs.get_database(gq.release, gq.species, 
+        db = dbs.get_database(gq.release, gq.species,
                               request.app.state.dbs_dict)
         ret['meta'] = meta.db_meta(db)
 
@@ -352,15 +352,16 @@ async def genes_model(request: Request, response: Response, gq: GQ):
 
 
 @router.post("/genesdebug")
-async def genes_post(request: Request, response: Response):
-
+async def genes_post(request: Request):
     for h in request.headers:
         print(h, request.headers[h])
 
     b = await request.body()
     print(b)
 
-    return {'body':b.decode()}
+    return {
+        'body': b.decode()
+    }
 
 
 @router.post("/genes")
@@ -382,7 +383,7 @@ async def genes_json(request: Request, response: Response):
             species = json_data['species']
         else:
             raise Exception('species value is missing')
-            
+
         if 'ids' in json_data:
             ids = json_data['ids']
         elif 'ids[]' in json_data:
@@ -408,7 +409,7 @@ async def genes_json(request: Request, response: Response):
     except JSONDecodeError as e:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {
-            'message': 'Received data is not a valid JSON', 
+            'message': 'Received data is not a valid JSON',
             'detail': str(e)
         }
     except Exception as e:
@@ -422,11 +423,10 @@ async def genes_json(request: Request, response: Response):
 
 @router.post("/genesform")
 async def genes_form(request: Request, response: Response,
-                    release: str = Form(...), species: str = Form(...),
-                    ids: List[str] = Form(...),
-                    details: Optional[bool] = Form(...)):
+                     release: str = Form(...), species: str = Form(...),
+                     ids: List[str] = Form(...),
+                     details: Optional[bool] = Form(...)):
     ret = {}
-
 
     try:
         db = dbs.get_database(release, species, request.app.state.dbs_dict)
@@ -501,7 +501,7 @@ async def external_ids(request: Request, response: Response):
             species = json_data['species']
         else:
             raise Exception('species value is missing')
-            
+
         if 'ids' in json_data:
             ids = json_data['ids']
         else:
@@ -511,7 +511,6 @@ async def external_ids(request: Request, response: Response):
             source_db = json_data['source_db']
         else:
             source_db = 'Ensembl'
-
 
         db = dbs.get_database(release, species, request.app.state.dbs_dict)
         ret['meta'] = meta.db_meta(db)
@@ -600,14 +599,14 @@ async def search(request: Request, response: Response,
 
     try:
         db = dbs.get_database(release, species, request.app.state.dbs_dict)
-        
+
         ret['meta'] = meta.db_meta(db)
 
         ret['request'] = {
-            'term': term, 
-            'species': species, 
+            'term': term,
+            'species': species,
             'exact': exact,
-            'limit': limit, 
+            'limit': limit,
             'release': release
         }
 
@@ -672,10 +671,21 @@ async def history(request: Request, response: Response,
             'release_end': release_end
         }
 
+        start_idx = -1
+        end_idx = 100000
+        for x, db in enumerate(request.app.state.dbs):
+            rel = db['release']
+            if rel == release_start:
+                start_idx = max(x, start_idx)
+            if rel == release_end:
+                end_idx = min(x, end_idx)
+
+        all_dbs = request.app.state.dbs[end_idx:start_idx + 1]
+
         databases = []
-        for release in range(int(release_start), int(release_end) + 1):
-            d = dbs.get_database(release, species, request.app.state.dbs_dict)
-            databases.append(d)
+        for database in all_dbs:
+            if species == database['species']:
+                databases.append(database['db'])
 
         results = genesdb.get_history(databases, ensembl_id)
 
@@ -794,8 +804,3 @@ async def exon_info(request: Request, response: Response,
         return {'message': str(e)}
 
     return CustomORJSONResponse(ret)
-
-
-
-
-

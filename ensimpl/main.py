@@ -7,6 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 # from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -86,6 +87,17 @@ async def index_html(request: Request):
 @app.get('/ping')
 async def ping_json():
     return {'ping': 'ok'}
+
+
+@app.get('/favicon.ico')
+async def favicon():
+    file_name = 'favicon.ico'
+    file_path = os.path.join(static_dir, file_name)
+    return FileResponse(path=file_path,
+                        headers={
+                            'Content-Disposition':
+                                f'attachment; filename={file_name}'
+                        })
 
 
 @app.get('/search', response_class=HTMLResponse)

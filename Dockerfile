@@ -1,4 +1,4 @@
-FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 LABEL maintainer="Matthew Vincent <mattjvincent@gmail.com>" \
 	  version="1.0.0"
 

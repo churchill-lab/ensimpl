@@ -1,9 +1,14 @@
-# -*- coding: utf-8 -*-
 """Useful generic utilities for the package.
 """
 from collections import OrderedDict
 from functools import cmp_to_key
 from operator import itemgetter as ig
+from typing import Any
+from typing import AnyStr
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import OrderedDict as OrderedDictTyping
 from urllib.request import urlopen
 
 import bz2
@@ -12,6 +17,7 @@ import logging
 import os
 import random
 import re
+import sqlite3
 import string
 
 REGEX_ENSEMBL_MOUSE_ID = re.compile('ENSMUS([EGTP])[0-9]{11}', re.IGNORECASE)
@@ -23,7 +29,7 @@ logging.basicConfig(format='[Ensimpl] [%(asctime)s] %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     """Get the logger.
 
     Returns:
@@ -32,7 +38,7 @@ def get_logger():
     return logging.getLogger(__name__)
 
 
-def configure_logging(level=0):
+def configure_logging(level: Optional[int] = 0) -> None:
     """Configure the logger with the specified `level`. Valid `level` values
     are:
 
@@ -44,10 +50,10 @@ def configure_logging(level=0):
     2+      logging.DEBUG is developer debug
     ======  =================================
 
-    Anything greater than ``2`` is treated as ``2``.
+    Anything greater than 2 is treated as 2.
 
     Args:
-        level (int, optional): The logging level; defaults to ``0``.
+        The logging level; defaults to 0.
     """
     if level == 0:
         get_logger().setLevel(logging.WARN)
@@ -57,15 +63,15 @@ def configure_logging(level=0):
         get_logger().setLevel(logging.DEBUG)
 
 
-def dictify_row(cursor, row):
-    """Turns the given row into a dictionary where the keys are the column names.
+def dictify_row(cursor: sqlite3.Cursor, row: sqlite3.Row) -> OrderedDictTyping:
+    """Turns the given row into a dict where the keys are the column names.
 
     Args:
         cursor (sqlite3.Cursor): The database cursor.
         row (sqlite3.Row): The current row.
 
     Returns:
-        collections.OrderedDict: A ``dict`` with keys as column names.
+        An OrderedDict where keys are column names.
     """
     d = OrderedDict()
     for i, col in enumerate(cursor.description):
@@ -73,7 +79,7 @@ def dictify_row(cursor, row):
     return d
 
 
-def dictify_cursor(cursor):
+def dictify_cursor(cursor: sqlite3.Cursor) -> List[OrderedDictTyping]:
     """All rows are converted into a :class:`collections.OrderedDict` where
     keys are the column names.
 
@@ -81,13 +87,13 @@ def dictify_cursor(cursor):
         cursor (sqlite3.Cursor): The database cursor.
 
     Returns:
-        list: A ``list`` of ``dicts`` where each ``dict's`` key is a column
-        name.
+        A list of dicts where keys are column names.
+
     """
     return [dictify_row(cursor, row) for row in cursor]
 
 
-def cmp(value_1, value_2):
+def cmp(value_1: Any, value_2: Any) -> int:
     """Compare two values.  The return value will be ``-1`` if
     `value_1` is less than `value_2`, ``0`` if `value_1` is equal
     to `value_2`, or ``1`` if `value_1` is greater than `value_2`.
@@ -97,18 +103,19 @@ def cmp(value_1, value_2):
         value_2: The second value.
 
     Returns:
-        int:  ``-1``, ``0``, or ``1``
+        int:  -1, 0, 1
     """
     return (value_1 > value_2) - (value_1 < value_2)
 
 
-def create_random_string(size=6, chars=string.ascii_uppercase + string.digits):
+def create_random_string(size: Optional[int] = 6,
+                         chars: List[str] = string.ascii_uppercase + string.digits) -> str:
     """Generate a random string of length `size` using the characters
     specified by `chars`.
 
     Args:
-        size (int, optional): The length of the string.  6 is the default.
-        chars (list, optional): The characters to use.
+        size: The length of the string.  6 is the default.
+        chars: The characters to use.
 
     Returns:
         str: A random generated string.
@@ -116,11 +123,11 @@ def create_random_string(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def delete_file(file_name):
+def delete_file(file_name: str) -> None:
     """ Delete specified `file_name`.  This will fail silently.
 
     Args:
-        file_name (str): The name of file to delete.
+        file_name: The name of file to delete.
     """
     try:
         os.remove(file_name)
@@ -128,22 +135,22 @@ def delete_file(file_name):
         pass
 
 
-def format_time(start, end):
+def format_time(start: float, end: float) -> str:
     """Format length of time between start and end into a readable string.
 
     Args:
-        start (float): The start time.
-        end (float): The end time.
+        start: The start time.
+        end: The end time.
 
     Returns:
-        str: A formatted string of hours, minutes, and seconds.
+        A formatted string of hours, minutes, and seconds.
     """
     hours, rem = divmod(end-start, 3600)
     minutes, seconds = divmod(rem, 60)
     return f'{int(hours):0>2}:{int(minutes):0>2}:{int(seconds):05.2f}'
 
 
-def get_file_name(url, directory=None):
+def get_file_name(url: str, directory: Optional[str] = None) -> AnyStr:
     """Get the file name of `url`.  If `directory` has a value, return the
     name of the file with directory prepended.
 
@@ -152,25 +159,25 @@ def get_file_name(url, directory=None):
         '/tmp/file.html
 
     Args:
-        url (str): The url of a file.
-        directory (str, optional): The name of a directory.
+        url: The url of a file.
+        directory: The name of a directory.
 
     Returns:
-        str: The full path of file.
+        The full path of file.
     """
     download_file_name = url.split('/')[-1]
     local_directory = directory if directory else os.getcwd()
     return os.path.abspath(os.path.join(local_directory, download_file_name))
 
 
-def is_url(url):
+def is_url(url: str) -> bool:
     """Check if this is a URL or not by just checking the protocol.
 
     Args:
-        url (str): A string in the form of a url.
+        url: A string in the form of a url.
 
     Returns:
-        bool: ``True`` if `url` has a valid protocol, ``False`` otherwise.
+        True if `url` has a valid protocol, False otherwise.
     """
     if url and url.startswith(('http://', 'https://', 'ftp://')):
         return True
@@ -178,22 +185,22 @@ def is_url(url):
     return False
 
 
-def merge_two_dicts(x, y):
+def merge_two_dicts(x: dict, y: dict) -> Dict:
     """Given two dicts, merge them into a new dict as a shallow copy.
 
     Args:
-        x (dict): Dictionary 1.
-        y (dict): Dictionary 2.
+        x: Dictionary 1.
+        y: Dictionary 2.
 
     Returns:
-        dict: The merged dictionary.
+        The merged dictionary.
     """
     z = x.copy()
     z.update(y)
     return z
 
 
-def multikeysort(items, columns):
+def multikeysort(items: List[Dict], columns: List[str]) -> List[Dict]:
     """Sort a ``list`` of ``dicts`` by multiple keys in ascending or descending
     order. To sort in descending order, prepend a '-' (minus sign) on the
     column name.
@@ -241,16 +248,16 @@ def multikeysort(items, columns):
     return sorted(items, key=cmp_to_key(comparer))
 
 
-def open_resource(resource, mode='rb'):
+def open_resource(resource: str, mode: Optional[str] = 'rb'):
     """Open different types of files and return a handle to that resource.
     Valid types of resources are gzipped and bzipped files along with URLs.
 
     Args:
-        resource (str): A string representing a file or url.
-        mode (str, optional): Mode to open the file.
+        resource: A string representing a file or url.
+        mode: Mode to open the file.
 
     Returns:
-        A handle to the opened ``resource``.
+        A handle to the opened resource.
     """
     if not resource:
         return None
@@ -268,20 +275,19 @@ def open_resource(resource, mode='rb'):
         return open(resource, mode)
 
 
-def str2bool(val):
+def str2bool(val: str) -> bool:
     """Convert a string into a boolean.  Valid strings that return ``True``
     are: ``true``, ``1``, ``t``, ``y``, ``yes``
 
     Canse-sensitivity does NOT matter.  ``yes`` is the same as ``YeS``.
 
     Args:
-        val (str): A string representing the boolean value of ``True``.
+        val: A string representing the boolean value of ``True``.
 
     Returns:
-        bool: ``True`` if `val` represents a boolean ``True``.
+        True val represents a boolean True
     """
     return str(val).lower() in ['true', '1', 't', 'y', 'yes']
-
 
 
 class Region:
@@ -294,9 +300,9 @@ class Region:
     """
     def __init__(self):
         """Initialization."""
-        self.chromosome = ''
-        self.start_position = None
-        self.end_position = None
+        self.chromosome: str
+        self.start_position: int
+        self.end_position: int
 
     def __str__(self):
         """Return string representing this region.
@@ -316,7 +322,7 @@ class Region:
                 f'{self.start_position}-{self.end_position})')
 
 
-def nvl(value, default):
+def nvl(value: Any, default: Any) -> Any:
     """Returns `value` if value has a value, else `default`.
 
     Args:
@@ -329,7 +335,7 @@ def nvl(value, default):
     return value if value else default
 
 
-def nvli(value, default):
+def nvli(value, default) -> int:
     """Returns `value` as an int if `value` can be converted, else `default`.
 
     Args:
@@ -348,17 +354,17 @@ def nvli(value, default):
     return ret
 
 
-def get_multiplier(factor):
+def get_multiplier(factor: str) -> int:
     """Get multiplying factor.
 
     The factor value should be 'mb', 'm', or 'k' and the correct multiplier
     will be returned.
 
     Args:
-        factor (str): One of 'mb', 'm', or 'k'.
+        factor: One of 'mb', 'm', or 'k'.
 
     Returns:
-        int: The multiplying value.
+        The multiplying value.
     """
     if factor:
         factor = factor.lower()
@@ -373,14 +379,14 @@ def get_multiplier(factor):
     return 1
 
 
-def str_to_region(location):
+def str_to_region(location: str) -> Region:
     """Parse a string into a genomic location.
 
     Args:
-        location (str): The genomic location (range).
+        location: The genomic location (range).
 
     Returns:
-        Region: A region object.
+        A Region object.
 
     Raises:
         ValueError: If `location` is invalid.
@@ -421,14 +427,14 @@ def str_to_region(location):
     return loc
 
 
-def is_valid_region(term):
+def is_valid_region(term: str) -> bool:
     """Check if a string can be parsed into a genomic location.
 
     Args:
-        term (str): The genomic location (range).
+        term: The genomic location (range).
 
     Returns:
-        bool: True if valid region, False otherwise
+        True if valid region, False otherwise
     """
     try:
         if ('-' not in term) and (' ' not in term) and (':' not in term):
@@ -447,14 +453,14 @@ def is_valid_region(term):
     return True
 
 
-def validate_ensembl_id(ensembl_id):
+def validate_ensembl_id(ensembl_id: str) -> str:
     """Validate an id to make sure it conforms to the convention.
 
     Args:
-        ensembl_id (str): The Ensembl identifer to test.
+        ensembl_id: The Ensembl identifer to test.
 
     Returns:
-        str: The Ensembl id.
+        The Ensembl id.
 
     Raises:
         ValueError: If `ensembl_id` is invalid.
