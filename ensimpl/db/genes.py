@@ -690,7 +690,6 @@ def get_history(databases: List[str], ensembl_id: str,
     try:
         for database in databases:
             rs = dbs.get_release_species(database)
-            print(rs)
             results[rs['release']] = get(database, [ensembl_id], details)
 
     except ValueError as e:
