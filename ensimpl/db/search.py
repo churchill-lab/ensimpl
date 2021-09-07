@@ -342,7 +342,7 @@ def execute_query(db: str, query: Query, limit: Optional[int] = None) -> Result:
 
 def search(db: str, term: str,
            exact: Optional[bool] = True,
-           limit: Optional[int] = None) -> Optional[Dict]:
+           limit: Optional[int] = None) -> Optional[Result]:
     """Perform the search.
 
     Args:
@@ -360,6 +360,6 @@ def search(db: str, term: str,
 
         return result
     except SearchException as se:
-        print('Error: {}'.format(se))
+        LOG.error('Error: {}'.format(se))
         return None
 

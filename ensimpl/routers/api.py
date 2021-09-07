@@ -629,8 +629,10 @@ async def search(request: Request, response: Response,
             ret['result']['matches'].append(match.dict())
 
     except Exception as e:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {'message': str(e)}
+        # TODO: better handling and logging
+        # response.status_code = status.HTTP_404_NOT_FOUND
+        # print(str(e))
+        pass
 
     return CustomORJSONResponse(ret)
 
