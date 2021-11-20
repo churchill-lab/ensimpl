@@ -1,8 +1,9 @@
-from typing import Dict
+import os
+import re
+import sqlite3
+
 from typing import List
 from typing import Optional
-import sqlite3
-import re
 
 import ensimpl.utils as utils
 
@@ -261,6 +262,10 @@ def execute_query(db: str, query: Query, limit: Optional[int] = None) -> Result:
     ilimit = utils.nvli(limit, -1)
 
     try:
+        # prevent erroneously creating a database
+        if not os.path.isfile(db):
+            raise FileNotFoundError(db)
+
         conn = sqlite3.connect(db)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()

@@ -1,9 +1,14 @@
+# standard library imports
+import os
 import sqlite3
 from collections import OrderedDict
+
+# third party imports
 from typing import Dict
 from typing import List
 from typing import Optional
 
+# local imports
 from ensimpl.db import dbs
 from ensimpl.db import meta
 from ensimpl import utils
@@ -269,6 +274,10 @@ def get_ids(db: str, ids: Optional[List[str]] = None,
         raise ValueError(f'Valid source dbs are: {",".join(valid_db_ids)}')
 
     try:
+        # prevent erroneously creating a database
+        if not os.path.isfile(db):
+            raise FileNotFoundError(db)
+
         conn = sqlite3.connect(db)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -333,6 +342,10 @@ def get_homology(db: str, ids: Optional[List[str]] = None) -> Dict:
     results = OrderedDict()
 
     try:
+        # prevent erroneously creating a database
+        if not os.path.isfile(db):
+            raise FileNotFoundError(db)
+
         conn = sqlite3.connect(db)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -436,6 +449,10 @@ def get(db: str, ids: Optional[List[str]] = None, order: Optional[str] = 'id',
     results = OrderedDict()
 
     try:
+        # prevent erroneously creating a database
+        if not os.path.isfile(db):
+            raise FileNotFoundError(db)
+
         conn = sqlite3.connect(db)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -650,6 +667,10 @@ def random_ids(db: str, source_db: Optional[str] = 'Ensembl',
 
     sql_statement = SQL_IDS_RANDOM
 
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
+
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -690,7 +711,8 @@ def get_history(databases: List[str], ensembl_id: str,
     try:
         for database in databases:
             rs = dbs.get_release_species(database)
-            results[rs['release']] = get(database, [ensembl_id], details)
+            id_data = get(database, [ensembl_id], details)
+            results[rs['release']] = id_data[ensembl_id]
 
     except ValueError as e:
         LOG.debug(e)
@@ -754,6 +776,10 @@ def get_exon_info(db: str, chrom: Optional[str] = None,
     Raises:
         Exception: When sqlite error or other error occurs.
     """
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
+
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()

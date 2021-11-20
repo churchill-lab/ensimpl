@@ -1,7 +1,9 @@
 from collections import OrderedDict
+import os
+import sqlite3
+
 from typing import Dict
 from typing import List
-import sqlite3
 
 from ensimpl import utils
 from ensimpl.db import dbs
@@ -20,6 +22,10 @@ def chromosomes(db: str) -> List:
 
     """
     sql_statement = 'SELECT * FROM chromosomes ORDER BY chromosome_num '
+
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
 
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
@@ -55,6 +61,10 @@ def karyotypes(db: str) -> List:
          WHERE k.chromosome = c.chromosome
         ORDER BY c.chromosome_num, k.seq_region_start
     '''
+
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
 
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
@@ -101,6 +111,10 @@ def db_meta(db: str) -> Dict:
     '''
     meta_data = {}
 
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
+
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -135,6 +149,10 @@ def stats(db: str) -> Dict:
          ORDER BY sr.score desc
     '''
 
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
+
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -161,6 +179,10 @@ def external_dbs(db: str) -> List:
 
     """
     sql_statement = 'SELECT * FROM external_dbs ORDER BY external_db_key '
+
+    # prevent erroneously creating a database
+    if not os.path.isfile(db):
+        raise FileNotFoundError(db)
 
     conn = sqlite3.connect(db)
     conn.row_factory = sqlite3.Row

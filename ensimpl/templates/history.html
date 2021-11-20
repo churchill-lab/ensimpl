@@ -149,8 +149,9 @@
                 let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 
                 let history_keys = Object.keys(window.HISTORY).sort(collator.compare);
+                console.log(history_keys);
 
-                let prev = window.HISTORY[history_keys[0]][identifier];
+                let prev = window.HISTORY[history_keys[0]];
 
                 let table = `
                         <table class="table table-bordered">
@@ -214,7 +215,7 @@
 
 
                 for(let i = 1; i < history_keys.length; i++) {
-                    let curr = window.HISTORY[history_keys[i]][identifier];
+                    let curr = window.HISTORY[history_keys[i]];
 
                     table += `<tr><td>${history_keys[i]}</td>`;
 
