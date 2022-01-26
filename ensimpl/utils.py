@@ -23,7 +23,7 @@ import string
 REGEX_ENSEMBL_MOUSE_ID = re.compile('ENSMUS([EGTP])[0-9]{11}', re.IGNORECASE)
 REGEX_ENSEMBL_HUMAN_ID = re.compile('ENS([EGTP])[0-9]{11}', re.IGNORECASE)
 REGEX_MGI_ID = re.compile('MGI:[0-9]{1,}', re.IGNORECASE)
-REGEX_REGION = re.compile('(CHR|)*\s*([0-9]{1,2}|X|Y|MT)\s*(-|:)?\s*(\d+)\s*(MB|M|K|)?\s*(-|:|)?\s*(\d+|)\s*(MB|M|K|)?', re.IGNORECASE)
+REGEX_REGION = re.compile('(CHR|)*\s*([0-9]{1,2}|X|Y|MT)\s*(-|:)?\s*(\d+\.*\d*)\s*(MB|M|K|)?\s*(-|:|)?\s*(\d+\.*\d*|)\s*(MB|M|K|)?', re.IGNORECASE)
 
 logging.basicConfig(format='[Ensimpl] [%(asctime)s] %(message)s',
                     datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -370,10 +370,8 @@ def get_multiplier(factor: str) -> int:
         factor = factor.lower()
 
         if factor == 'mb':
-            return 10000000
-        elif factor == 'm':
             return 1000000
-        elif factor == 'k':
+        elif factor == 'kb':
             return 1000
 
     return 1
@@ -415,8 +413,15 @@ def str_to_region(location: str) -> Region:
     multiplier_one = match.group(5)
     multiplier_two = match.group(8)
 
-    loc.start_position = int(loc.start_position)
-    loc.end_position = int(loc.end_position)
+    if '.' in loc.start_position:
+        loc.start_position = float(loc.start_position)
+    else:
+        loc.start_position = int(loc.start_position)
+
+    if '.' in loc.end_position:
+        loc.end_position = float(loc.end_position)
+    else:
+        loc.end_position = int(loc.end_position)
 
     if multiplier_one:
         loc.start_position *= get_multiplier(multiplier_one)

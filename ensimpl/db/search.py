@@ -12,7 +12,7 @@ LOG = utils.get_logger()
 REGEX_ENSEMBL_MOUSE_ID = re.compile('ENSMUS([EGTP])[0-9]{11}', re.IGNORECASE)
 REGEX_ENSEMBL_HUMAN_ID = re.compile('ENS([EGTP])[0-9]{11}', re.IGNORECASE)
 REGEX_MGI_ID = re.compile('MGI:[0-9]{1,}', re.IGNORECASE)
-REGEX_REGION = re.compile('(CHR|)*\s*([0-9]{1,2}|X|Y|MT)\s*(-|:)?\s*(\d+)\s*(MB|M|K|)?\s*(-|:|)?\s*(\d+|)\s*(MB|M|K|)?', re.IGNORECASE)
+REGEX_REGION = re.compile('(CHR|)*\s*([0-9]{1,2}|X|Y|MT)\s*(-|:)?\s*(\d+\.*\d*)\s*(MB|M|K|)?\s*(-|:|)?\s*(\d+\.*\d*|)\s*(MB|M|K|)?', re.IGNORECASE)
 
 SQL_TERM_EXACT = '''
 SELECT MAX(s.score||'||'||s.description||'||'||l.lookup_value) AS match_description, 
