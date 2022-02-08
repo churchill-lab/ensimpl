@@ -7,4 +7,3 @@ RUN pip install -r requirements.txt
 
 COPY ./ensimpl /app/ensimpl
 
-
