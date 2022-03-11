@@ -15,5 +15,5 @@ starlette==0.14.2
 tabulate==0.8.9
 typer==0.3.2
 typing-extensions==3.10.0.0
-ujson==4.1.0
+ujson==5.1.0
 uvicorn==0.15.0
