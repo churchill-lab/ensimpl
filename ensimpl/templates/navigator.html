@@ -560,27 +560,37 @@
         window.ENSIMPL = new ensimpl();
 
         window.ENSIMPL.releases(function(data) {
+
             window.ENSIMPL_RELEASES = {};
             let species = {};
 
             $.each(data, function(idx, elem) {
-                window.ENSIMPL_RELEASES[elem['release']] = elem;
+                if (!(elem['species'] in window.ENSIMPL_RELEASES)) {
+                    window.ENSIMPL_RELEASES[elem['species']] = {};
+                }
+                window.ENSIMPL_RELEASES[elem['species']][elem['release']] = elem;
                 species[elem['species']] = elem['species'];
             });
 
-            let vals = Object.values(window.ENSIMPL_RELEASES);
-            vals.sort().reverse();
+           $.each(species, function(key, val) {
+               $("#selectSpecies").append('<option value="' + key + '">' + val + '</option>')
+           });
 
-            $.each(vals, function(key, val) {
-                $("#selectRelease").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
+            $("#selectSpecies").on("change", function (evt) {
+                let species = $("#selectSpecies").val();
+                let vals = Object.values(window.ENSIMPL_RELEASES[species]);
+                vals.sort().reverse();
+
+                $("#selectRelease").empty();
+
+                $.each(vals, function(key, val) {
+                    $("#selectRelease").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
+                });
             });
 
+            $('#selectSpecies').val('Mm').trigger('change');
 
-            $.each(species, function(key, val) {
-                $("#selectSpecies").append('<option value="' + key + '">' + val + '</option>')
-            });
 
-            $('#selectSpecies').val('Mm');
 
             let selectedRelease = $("#selectRelease").val();
             let selectedSpecies = $("#selectSpecies").val();

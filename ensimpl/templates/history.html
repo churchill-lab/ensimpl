@@ -167,7 +167,7 @@
                               <th scope="col">End</th>
                             </tr>
                           </thead><tbody>`;
-                table += `<tr><td>${history_keys[0]}</td><td>${window.ENSIMPL_RELEASES[history_keys[0]].assembly_patch}</td>`;
+                table += `<tr><td>${history_keys[0]}</td><td>${window.ENSIMPL_RELEASES[species][history_keys[0]].assembly_patch}</td>`;
 
                 if ('ensembl_version' in prev) {
                     table += `<td>${prev.ensembl_version}</td>`;
@@ -219,10 +219,10 @@
 
                     table += `<tr><td>${history_keys[i]}</td>`;
 
-                    if (window.ENSIMPL_RELEASES[history_keys[i]].assembly_patch !== window.ENSIMPL_RELEASES[history_keys[i-1]].assembly_patch) {
-                        table += `<td class="change">${window.ENSIMPL_RELEASES[history_keys[i]].assembly_patch}</td>`;
+                    if (window.ENSIMPL_RELEASES[species][history_keys[i]].assembly_patch !== window.ENSIMPL_RELEASES[species][history_keys[i-1]].assembly_patch) {
+                        table += `<td class="change">${window.ENSIMPL_RELEASES[species][history_keys[i]].assembly_patch}</td>`;
                     } else {
-                        table += `<td>${window.ENSIMPL_RELEASES[history_keys[i]].assembly_patch}</td>`;
+                        table += `<td>${window.ENSIMPL_RELEASES[species][history_keys[i]].assembly_patch}</td>`;
 
                     }
 
@@ -506,34 +506,45 @@
         window.ENSIMPL = new ensimpl();
 
         window.ENSIMPL.releases(function(data) {
+
             window.ENSIMPL_RELEASES = {};
             let species = {};
 
             $.each(data, function(idx, elem) {
-                window.ENSIMPL_RELEASES[elem['release']] = elem;
+                if (!(elem['species'] in window.ENSIMPL_RELEASES)) {
+                    window.ENSIMPL_RELEASES[elem['species']] = {};
+                }
+                window.ENSIMPL_RELEASES[elem['species']][elem['release']] = elem;
                 species[elem['species']] = elem['species'];
             });
-
-            let vals = Object.values(window.ENSIMPL_RELEASES);
-
-            $.each(vals, function(key, val) {
-                $("#selectReleaseStart").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
-            });
-
-            vals.sort().reverse();
-
-            $.each(vals, function(key, val) {
-                $("#selectReleaseEnd").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
-            });
-
 
            $.each(species, function(key, val) {
                $("#selectSpecies").append('<option value="' + key + '">' + val + '</option>')
            });
 
-            $('#selectSpecies').val('Mm');
+            $("#selectSpecies").on("change", function (evt) {
+                let species = $("#selectSpecies").val();
+                let vals = Object.values(window.ENSIMPL_RELEASES[species]);
+
+                $("#selectReleaseStart").empty();
+
+                $.each(vals, function(key, val) {
+                    $("#selectReleaseStart").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
+                });
+
+                vals.sort().reverse();
+
+                $("#selectReleaseEnd").empty();
+
+                $.each(vals, function(key, val) {
+                    $("#selectReleaseEnd").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
+                });
+            });
+
+            $('#selectSpecies').val('Mm').trigger('change');
 
         });
+
 
         $('#btnGo').button().on('click', function (evt) {
             evt.preventDefault();

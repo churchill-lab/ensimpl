@@ -64,6 +64,12 @@ def parse_config(resource_name):
         LOG.debug('Error on the following:')
         LOG.debug(line)
         all_releases = None
+    except Exception as exc:
+        LOG.error(f'Unable to parse resource: {resource_name}')
+        LOG.debug(exc)
+        LOG.debug('Error on the following:')
+        LOG.debug(line)
+        all_releases = None
 
     return all_releases
 

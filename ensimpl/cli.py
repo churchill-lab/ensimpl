@@ -58,7 +58,7 @@ def create(directory: Path = typer.Option(
         LOG.info('Creating database...')
 
         tstart = time.time()
-        create_ensimpl.create(release, species, directory, resource)
+        create_ensimpl.create(release, species, directory, str(resource))
         tend = time.time()
 
         LOG.info(f'Creation time: {format_time(tstart, tend)}')
