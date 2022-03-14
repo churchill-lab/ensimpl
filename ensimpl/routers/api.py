@@ -123,9 +123,14 @@ async def releases(request: Request, response: Response):
 
     try:
         for database in request.app.state.dbs:
-            db = dbs.get_database(database['release'], database['species'],
-                                  request.app.state.dbs_dict)
-            ret.append(meta.db_meta(db))
+            ret.append({
+                'release': database['release'],
+                'species': database['species'],
+                'greedy_release': database['greedy_release'],
+                'assembly': database['assembly'],
+                'assembly_patch': database['assembly_patch'],
+                'url': database['url']
+            })
     except Exception as e:
         response.status_code = status.HTTP_404_NOT_FOUND
         return {'message': str(e)}
@@ -531,7 +536,8 @@ async def external_ids(request: Request, response: Response):
 @router.get("/search", response_class=UJSONResponse)
 async def search(request: Request, response: Response,
                  term: str, release: str, species: str,
-                 exact: Optional[bool] = False, limit: Optional[int] = 100000):
+                 exact: Optional[bool] = False, limit: Optional[int] = 100000,
+                 greedy: Optional[bool] = False):
     """
     Perform a search of a Ensimpl database.
 
@@ -545,6 +551,7 @@ async def search(request: Request, response: Response,
     species  string   the species identifier (example 'Hs', 'Mm')
     exact    string   to exact match or not, defaults to 'False'
     limit    string   max number of items to return, defaults to 100,000
+    greedy   string   to perform greedy search (amx assembly for release)
     =======  =======  ===================================================
 
     If sucessful, a JSON response will be returned with the following elements:
@@ -598,7 +605,7 @@ async def search(request: Request, response: Response,
     ret = {}
 
     try:
-        db = dbs.get_database(release, species, request.app.state.dbs_dict)
+        db = dbs.get_database(release, species, request.app.state.dbs_dict, greedy)
 
         ret['meta'] = meta.db_meta(db)
 
@@ -607,7 +614,8 @@ async def search(request: Request, response: Response,
             'species': species,
             'exact': exact,
             'limit': limit,
-            'release': release
+            'release': release,
+            'greedy': greedy
         }
 
         ret['result'] = {

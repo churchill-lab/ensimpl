@@ -39,13 +39,25 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label for="fields" class="col-4 col-form-label">Term</label>
+                                <label for="searchTerm" class="col-4 col-form-label">Term</label>
                                 <div class="col-8">
                                     <input type="text" id="searchTerm" class="form-control form-control-sm"/>
                                 </div>
                             </div>
 
+                            <div class="form-group row">
+                                <label for="greedy" class="col-4 col-form-label">Greedy Search</label>
+                                <div class="form-check m-0 col-8">
+                                    <input class="form-check-input" type="checkbox" value="greedy" id="greedy">
+                                </div>
+                            </div>
 
+                            <div class="form-group row">
+                                <div class="col-12">
+                                    <span id="greedyText"></span>
+
+                                </div>
+                            </div>
                         </div>
 
                         <div class="card-footer text-muted">
@@ -229,7 +241,8 @@
         let options = {
             release: release,
             species: species,
-            limit: 100
+            limit: 100,
+            greedy: $('#greedy').prop('checked')
         };
 
         let selectionsTemp = $('[id^="column_"]');
@@ -573,6 +586,20 @@
             return false;
         });
 
+    function setGreedyWarning() {
+            let greedy = $('#greedy').prop('checked');
+             if (greedy) {
+                 let release = $("#selectRelease").val();
+                 let species = $("#selectSpecies").val();
+                 let rel = window.ENSIMPL_RELEASES[species][release];
+                 let greedy_release = rel['greedy_release'];
+
+                 $("#greedyText").html(`Ensimpl version ${greedy_release} will be used instead.`);
+             } else {
+                 $("#greedyText").html('');
+             }
+    }
+
     $().ready(function () {
         $("#dl").hide();
 
@@ -605,10 +632,21 @@
                 $.each(vals, function(key, val) {
                     $("#selectRelease").append('<option value="' + val.release + '">' + val.release + ' - ' + val.assembly_patch + '</option>')
                 });
+
+                setGreedyWarning();
             });
 
             $('#selectSpecies').val('Mm').trigger('change');
 
+            $("#selectRelease").on("change", function (evt) {
+                setGreedyWarning()
+            });
+        });
+
+
+
+        $('#greedy').on('change', function(event) {
+            setGreedyWarning();
         });
 
         $('#searchTerm').keypress(function (evt) {

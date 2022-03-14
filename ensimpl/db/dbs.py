@@ -7,6 +7,7 @@ import os
 import natsort
 
 from ensimpl.utils import multikeysort
+from ensimpl.db import meta
 
 ENSIMPL_DB_NAME = 'ensimpl.*.db3'
 
@@ -20,24 +21,46 @@ def get_all_ensimpl_dbs(directory: str) -> Tuple:
     """
     databases = glob.glob(os.path.join(directory, ENSIMPL_DB_NAME))
 
+    max_assembly = {}
+    temp_list = []
+
+    for db in databases:
+        meta_info = meta.db_meta(db)
+        assembly = meta_info['assembly']
+        release = int(meta_info['release'])
+        species = meta_info['species']
+        combined_key = f'{assembly}:{species}'
+
+        # db should be a string consisting of the following elements:
+        # 'ensimpl', release, species, 'db3'
+        val = {
+            'db': db,
+            'species': species,
+            'release': release,
+            'assembly': assembly,
+            'assembly_patch': meta_info['assembly_patch'],
+            'url': meta_info['url'],
+            'greedy_release': None
+        }
+
+        max_assembly[combined_key] = max(max_assembly.get(combined_key, release),
+                                         release)
+
+        temp_list.append(val)
+
     db_list = []
     db_dict = {}
 
-    for db in databases:
-        # db should be a string consisting of the following elements:
-        # 'ensimpl', version, species, 'db3'
-        val = {
-            'release': db.split('.')[1],
-            'species': db.split('.')[2],
-            'db': db
-        }
-        db_list.append(val)
+    for db in temp_list:
+        combined_key_assembly = f'{db["assembly"]}:{db["species"]}'
+        db['greedy_release'] = max_assembly[combined_key_assembly]
+        db_list.append(db)
 
         # combined key will be 'release:species'
-        combined_key = f'{val["release"]}:{val["species"]}'
-        db_dict[combined_key] = val
+        combined_key = f'{db["release"]}:{db["species"]}'
+        db_dict[combined_key] = db
 
-    # sort the databases in descending order by version and than species for
+    # sort the databases in descending order by version and then species for
     # readability in the API
     all_sorted_dbs = \
         natsort.natsorted(db_list, key=lambda e: (e['release'], e['species']))
@@ -86,7 +109,8 @@ def init(directory: Optional[str] = None) -> Tuple:
     return get_all_ensimpl_dbs(ensimpl_dir)
 
 
-def get_database(release: str, species: str, dbs: dict) -> str:
+def get_database(release: str, species: str, dbs: dict,
+                 greedy: Optional[bool] = False) -> str:
     """
     Connect to the Ensimpl database.
 
@@ -94,12 +118,16 @@ def get_database(release: str, species: str, dbs: dict) -> str:
         release: The Ensembl release.
         species: The Ensembl species identifier.
         dbs: The Ensimpl dbs.
+        greedy: True to search latest assembly for a release.
 
     Returns:
         The sqlite database.
     """
     try:
-        return dbs[f'{release}:{species}']['db']        
+        if greedy:
+            release = dbs[f'{release}:{species}']['greedy_release']
+
+        return dbs[f'{release}:{species}']['db']
     except Exception:
         ensimpl_dir = os.environ.get('ENSIMPL_DIR', None)
         raise Exception(f'Unable to find database: '
