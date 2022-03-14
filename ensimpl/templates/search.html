@@ -151,6 +151,12 @@
                                         </label>
                                     </div>
                                     <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="match_score" id="column_match_score">
+                                        <label class="form-check-label" for="column_match_score">
+                                            Score
+                                        </label>
+                                    </div>
+                                    <div class="form-check m-0">
                                         <input class="form-check-input" type="checkbox" checked="checked" value="match_reason" id="column_match_reason">
                                         <label class="form-check-label" for="column_match_reason">
                                             Match Reason
@@ -290,6 +296,8 @@
                     h += '<th class="" scope="col">External ID</th>';
                 } else if (elem.value === 'homolog_ids') {
                     h += '<th class="" scope="col">Homolog IDs</th>';
+                } else if (elem.value === 'match_score') {
+                    h += '<th class="" scope="col">Score</th>';
                 } else if (elem.value === 'match_reason') {
                     h += '<th class="" scope="col">Match Reason</th>';
                 } else if (elem.value === 'match_value') {
@@ -374,6 +382,12 @@
                                         let homologs = homolog_ids.join('<br>');
 
                                         h2 += '<td>' + nvl(homologs, defaultValue) + '</td>';
+                                    } else {
+                                        h2 += '<td>' + defaultValue + '</td>';
+                                    }
+                                } else if (elem2.value === 'match_score') {
+                                    if ('score' in elem) {
+                                        h2 += '<td>' + nvl(elem.score, defaultValue) + '</td>';
                                     } else {
                                         h2 += '<td>' + defaultValue + '</td>';
                                     }

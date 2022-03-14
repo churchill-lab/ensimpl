@@ -605,42 +605,132 @@ async def search(request: Request, response: Response,
     ret = {}
 
     try:
-        db = dbs.get_database(release, species, request.app.state.dbs_dict, greedy)
+        if not greedy:
+            db = dbs.get_database(release, species, request.app.state.dbs_dict, False)
 
-        ret['meta'] = meta.db_meta(db)
+            ret['meta'] = meta.db_meta(db)
 
-        ret['request'] = {
-            'term': term,
-            'species': species,
-            'exact': exact,
-            'limit': limit,
-            'release': release,
-            'greedy': greedy
-        }
+            ret['request'] = {
+                'term': term,
+                'species': species,
+                'exact': exact,
+                'limit': limit,
+                'release': release,
+                'greedy': greedy
+            }
 
-        ret['result'] = {
-            'num_results': 0,
-            'num_matches': 0,
-            'matches': None
-        }
+            ret['result'] = {
+                'num_results': 0,
+                'num_matches': 0,
+                'matches': None
+            }
 
-        results = searchdb.search(db, term, exact, limit)
+            results = searchdb.search(db, term, exact, limit)
 
-        if len(results.matches) == 0:
-            raise Exception(f'No results found for: {term}')
+            if len(results.matches) == 0:
+                raise Exception(f'No results found for: {term}')
 
-        ret['result']['num_results'] = results.num_results
-        ret['result']['num_matches'] = results.num_matches
-        ret['result']['matches'] = []
+            ret['result']['num_results'] = results.num_results
+            ret['result']['num_matches'] = results.num_matches
+            ret['result']['matches'] = []
 
-        for match in results.matches:
-            ret['result']['matches'].append(match.dict())
+            for match in results.matches:
+                ret['result']['matches'].append(match.dict())
+        else:
+            from ensimpl.db.search import search, Match
+
+            results_combined = {}
+
+            #
+            # get original results
+            #
+            db_original = dbs.get_database(release, species, request.app.state.dbs_dict)
+            results_original = search(db_original, term, False)
+
+            ret['meta'] = meta.db_meta(db_original)
+
+            ret['request'] = {
+                'term': term,
+                'species': species,
+                'exact': exact,
+                'limit': limit,
+                'release': release,
+                'greedy': greedy
+            }
+
+            ret['result'] = {
+                'num_results': 0,
+                'num_matches': 0,
+                'matches': None
+            }
+
+            for result in results_original.matches:
+                results_combined[result.ensembl_gene_id] = result.dict()
+
+            print('len(results_combined)=', len(results_combined))
+
+            #
+            # get greedy results and collect all ensembl_ids
+            #
+            db_greedy = dbs.get_database(release, species, request.app.state.dbs_dict, True)
+            results_greedy = search(db_greedy, term, False)
+
+            dict_greedy = {}
+            for result in results_greedy.matches:
+                dict_greedy[result.ensembl_gene_id] = result
+
+            print('len(dict_greedy.values())=', len(dict_greedy.values()))
+
+            #
+            # query the original db by ensembl_ids
+            # # non existant ensembl_ids disappear
+            #
+            genes = genesdb.get(db_original, dict_greedy.keys())
+
+            for eid in genes:
+                v = genes[eid]
+                match = Match()
+
+                match.ensembl_gene_id = eid
+                match.ensembl_version = v['ensembl_version']
+                match.species = v['species_id']
+                match.symbol = v['symbol']
+                match.name = v.get('name', None)
+                match.external_ids = v.get('external_ids', None)
+                match.homolog_ids = v.get('homolog_ids', None)
+                match.synonyms = v.get('synonyms', None)
+                match.chromosome = v['chromosome']
+                match.position_start = v['start']
+                match.position_end = v['end']
+                match.strand = v['strand']
+                match.match_reason = f'Greedy:{greedy[eid].match_reason}'
+                match.match_value = dict_greedy[eid].match_value
+                match.score = dict_greedy[eid].score
+
+                if eid not in results_combined:
+                    results_combined[eid] = match.dict()
+
+            if len(results_combined.keys()) == 0:
+                raise Exception(f'No results found for: {term}')
+
+            ret['result']['num_results'] = -100
+            ret['result']['num_matches'] = -100
+
+            res = list(results_combined.values())
+            keyfun = lambda x: x['score']  # use a lambda if no operator modul
+
+            try:
+                res = sorted(res, key=keyfun, reverse=True)
+            except Exception as e:
+                print(e)
+
+            ret['result']['matches'] = res
 
     except Exception as e:
         # TODO: better handling and logging
         # response.status_code = status.HTTP_404_NOT_FOUND
-        # print(str(e))
-        pass
+        print(str(e))
+
 
     return CustomORJSONResponse(ret)
 
@@ -684,18 +774,16 @@ async def history(request: Request, response: Response,
         start_idx = -1
         end_idx = 100000
         for x, db in enumerate(request.app.state.dbs):
-            rel = db['release']
-            if rel == release_start:
+            if db['species'] == species and db['release'] == release_start:
                 start_idx = max(x, start_idx)
-            if rel == release_end:
+            if db['species'] == species and db['release'] == release_end:
                 end_idx = min(x, end_idx)
 
         all_dbs = request.app.state.dbs[end_idx:start_idx + 1]
 
         databases = []
         for database in all_dbs:
-            if species == database['species']:
-                databases.append(database['db'])
+            databases.append(database['db'])
 
         results = genesdb.get_history(databases, ensembl_id)
 

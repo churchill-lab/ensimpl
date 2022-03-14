@@ -27,7 +27,7 @@ def get_all_ensimpl_dbs(directory: str) -> Tuple:
     for db in databases:
         meta_info = meta.db_meta(db)
         assembly = meta_info['assembly']
-        release = int(meta_info['release'])
+        release = meta_info['release']
         species = meta_info['species']
         combined_key = f'{assembly}:{species}'
 
@@ -42,6 +42,8 @@ def get_all_ensimpl_dbs(directory: str) -> Tuple:
             'url': meta_info['url'],
             'greedy_release': None
         }
+
+        release = int(release)
 
         max_assembly[combined_key] = max(max_assembly.get(combined_key, release),
                                          release)

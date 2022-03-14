@@ -711,8 +711,13 @@ def get_history(databases: List[str], ensembl_id: str,
     try:
         for database in databases:
             rs = dbs.get_release_species(database)
-            id_data = get(database, [ensembl_id], details)
-            results[rs['release']] = id_data[ensembl_id]
+
+            try:
+                id_data = get(database, [ensembl_id], details)
+                results[rs['release']] = id_data[ensembl_id]
+            except KeyError as ke:
+                LOG.debug('value error', ke)
+
     except ValueError as ve:
         LOG.debug(ve)
     except Exception as e:
