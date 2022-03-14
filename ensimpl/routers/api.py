@@ -667,8 +667,6 @@ async def search(request: Request, response: Response,
             for result in results_original.matches:
                 results_combined[result.ensembl_gene_id] = result.dict()
 
-            print('len(results_combined)=', len(results_combined))
-
             #
             # get greedy results and collect all ensembl_ids
             #
@@ -678,8 +676,6 @@ async def search(request: Request, response: Response,
             dict_greedy = {}
             for result in results_greedy.matches:
                 dict_greedy[result.ensembl_gene_id] = result
-
-            print('len(dict_greedy.values())=', len(dict_greedy.values()))
 
             #
             # query the original db by ensembl_ids
@@ -703,7 +699,7 @@ async def search(request: Request, response: Response,
                 match.position_start = v['start']
                 match.position_end = v['end']
                 match.strand = v['strand']
-                match.match_reason = f'Greedy:{greedy[eid].match_reason}'
+                match.match_reason = f'Greedy:{dict_greedy[eid].match_reason}'
                 match.match_value = dict_greedy[eid].match_value
                 match.score = dict_greedy[eid].score
 
@@ -717,12 +713,11 @@ async def search(request: Request, response: Response,
             ret['result']['num_matches'] = -100
 
             res = list(results_combined.values())
-            keyfun = lambda x: x['score']  # use a lambda if no operator modul
 
             try:
-                res = sorted(res, key=keyfun, reverse=True)
+                res = sorted(res, key=lambda x: x['score'], reverse=True)
             except Exception as e:
-                print(e)
+                print('Error sorting', e)
 
             ret['result']['matches'] = res
 
