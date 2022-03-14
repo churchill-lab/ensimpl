@@ -133,7 +133,7 @@
                                         </label>
                                     </div>
                                     <div class="form-check m-0">
-                                        <input class="form-check-input" type="checkbox" value="synonyms" id="column_gene_synonyms">
+                                        <input class="form-check-input" type="checkbox" checked="checked" value="synonyms" id="column_gene_synonyms">
                                         <label class="form-check-label" for="column_gene_synonyms">
                                             Gene Synonyms
                                         </label>
@@ -641,6 +641,48 @@
             $("#selectRelease").on("change", function (evt) {
                 setGreedyWarning()
             });
+
+
+
+            // set the variables
+            const species_allowed_human = ['hs', 'human'];
+            const species_allowed_mouse = ['mm', 'mouse'];
+            let url_species = '{{ species }}'.toLowerCase();
+            if (species_allowed_human.includes(url_species)) {
+                $('#selectSpecies').val('Hs').trigger('change');
+            } else if (species_allowed_mouse.includes(url_species)) {
+                $('#selectSpecies').val('Mm').trigger('change');
+            }
+
+
+            let url_release = '{{ release }}';
+
+            if (url_release !== '') {
+                if (url_release in window.ENSIMPL_RELEASES[$('#selectSpecies').val()]) {
+                    console.log('url_release=', url_release);
+                    $('#selectRelease').val(url_release).trigger('change');
+                }
+            }
+
+            let url_term = '{{ term }}';
+
+            if (url_term !== '') {
+                $("#searchTerm").val(url_term);
+            }
+
+            const greedy_allowed = ['true', '1', 't', 'yes'];
+            let url_greedy = '{{ greedy }}'.toLowerCase();
+            if (greedy_allowed.includes(url_greedy)) {
+                console.log('triiggering change')
+                $('#greedy').attr("checked",true).trigger('change');
+            }
+
+            const exec_allowed = ['true', '1', 't', 'yes'];
+            let url_exec = '{{ exec }}'.toLowerCase();
+            if (exec_allowed.includes(url_exec)) {
+                findGene();
+            }
+
         });
 
 
@@ -663,6 +705,8 @@
             console.log('findGene');
             return false;
         });
+
+
     });
     //-->
 </script>

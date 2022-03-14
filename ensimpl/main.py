@@ -2,20 +2,21 @@ import os
 
 from fastapi import FastAPI
 from fastapi import Request
+from fastapi import Response
 from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from typing import Optional
+
 
 from ensimpl.fastapi_utils import GZipCompressionMiddleware
 from ensimpl.routers import api
-
 import ensimpl.db.dbs as dbs
 
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -101,9 +102,21 @@ async def favicon():
 
 
 @app.get('/search', response_class=HTMLResponse)
-async def search_html(request: Request):
-    return templates.TemplateResponse('search.html',
-                                      {'request': request, 'app': app})
+async def search_html(request: Request, response: Response,
+    term: Optional[str] = None, release: Optional[str] = None, species: Optional[str] = None,
+    greedy: Optional[bool] = False, exec: Optional[bool] = False):
+
+    options = {
+        'request': request,
+        'term': '' if term is None else term,
+        'release': '' if release is None else release,
+        'species': '' if species is None else str(species).lower(),
+        'greedy': 'false' if greedy is None else str(greedy).lower(),
+        'exec': 'false' if greedy is None else str(exec).lower(),
+        'app': app
+    }
+
+    return templates.TemplateResponse('search.html', options)
 
 
 @app.get('/navigator', response_class=HTMLResponse)
