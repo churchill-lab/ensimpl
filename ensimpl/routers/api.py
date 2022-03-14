@@ -709,15 +709,15 @@ async def search(request: Request, response: Response,
             if len(results_combined.keys()) == 0:
                 raise Exception(f'No results found for: {term}')
 
-            ret['result']['num_results'] = -100
-            ret['result']['num_matches'] = -100
-
             res = list(results_combined.values())
 
             try:
                 res = sorted(res, key=lambda x: x['score'], reverse=True)
             except Exception as e:
                 print('Error sorting', e)
+
+            ret['result']['num_results'] = len(results_combined)
+            ret['result']['num_matches'] = len(results_combined)
 
             ret['result']['matches'] = res
 
