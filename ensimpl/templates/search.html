@@ -271,6 +271,7 @@
             console.log('data=', data);
 
             window.SEARCHRESULTS = data || {};
+
             let numGenes = 0;
 
 
@@ -343,7 +344,6 @@
                                     } else {
                                         h2 += '<td>' + defaultValue + '</td>';
                                     }
-
                                 } else if (elem2.value === 'strand') {
                                     if ('strand' in elem) {
                                         h2 += '<td>' + nvl(elem.strand, defaultValue) + '</td>';
@@ -351,14 +351,14 @@
                                         h2 += '<td>' + defaultValue + '</td>';
                                     }
                                 } else if (elem2.value === 'synonyms') {
-                                    if ('synonyms' in elem) {
+                                    if (('synonyms' in elem) && (elem['synonyms'] != null)) {
                                         let synonyms = elem['synonyms'].join(':');
                                         h2 += '<td>' + nvl(synonyms, defaultValue) + '</td>';
                                     } else {
                                         h2 += '<td>' + defaultValue + '</td>';
                                     }
                                 } else if (elem2.value === 'external_ids') {
-                                    if ('external_ids' in elem) {
+                                    if (('external_ids' in elem) && (elem['external_ids'] != null)) {
                                         let external_ids = null;
 
                                         $.each(elem.external_ids, function(i, e) {
@@ -372,7 +372,7 @@
                                         h2 += '<td>' + defaultValue + '</td>';
                                     }
                                 } else if (elem2.value === 'homolog_ids') {
-                                    if ('homolog_ids' in elem) {
+                                    if (('homolog_ids' in elem) && (elem['homolog_ids'] != null)) {
                                         let homolog_ids = [];
 
                                         $.each(elem.homolog_ids, function(i, e) {

@@ -670,31 +670,54 @@ async def search(request: Request, response: Response,
             #
             # get greedy results and collect all ensembl_ids
             #
-            db_greedy = dbs.get_database(release, species, request.app.state.dbs_dict, True)
+            db_greedy = dbs.get_database(release,
+                                         species,
+                                         request.app.state.dbs_dict,
+                                         True)
+
             results_greedy = search(db_greedy, term, False)
 
             dict_greedy = {}
             for result in results_greedy.matches:
                 dict_greedy[result.ensembl_gene_id] = result
 
+            # the genes in l2 minus l1 are unique in l2 and therefor the only
+            # genes we need to query
+            l1 = set(results_combined.keys())
+            l2 = set(dict_greedy.keys())
+            ldiff = list(l2 - l1)
+
             #
             # query the original db by ensembl_ids
             # # non existant ensembl_ids disappear
             #
-            genes = genesdb.get(db_original, dict_greedy.keys())
+            genes = genesdb.get(db_original, ldiff)
 
             for eid in genes:
                 v = genes[eid]
-                match = Match()
 
+                match = Match()
                 match.ensembl_gene_id = eid
                 match.ensembl_version = v['ensembl_version']
                 match.species = v['species_id']
                 match.symbol = v['symbol']
-                match.name = v.get('name', None)
-                match.external_ids = v.get('external_ids', None)
-                match.homolog_ids = v.get('homolog_ids', None)
-                match.synonyms = v.get('synonyms', None)
+
+                name = v.get('name', None)
+                if name:
+                    match.name = name
+
+                external_ids = v.get('external_ids', None)
+                if external_ids:
+                    match.external_ids = external_ids
+
+                homolog_ids = v.get('homolog_ids', None)
+                if homolog_ids:
+                    match.homolog_ids = homolog_ids
+
+                synonyms = v.get('synonyms', None)
+                if synonyms:
+                    match.synonyms = synonyms
+
                 match.chromosome = v['chromosome']
                 match.position_start = v['start']
                 match.position_end = v['end']
@@ -703,8 +726,7 @@ async def search(request: Request, response: Response,
                 match.match_value = dict_greedy[eid].match_value
                 match.score = dict_greedy[eid].score
 
-                if eid not in results_combined:
-                    results_combined[eid] = match.dict()
+                results_combined[eid] = match.dict()
 
             if len(results_combined.keys()) == 0:
                 raise Exception(f'No results found for: {term}')
