@@ -645,7 +645,7 @@ async def search(request: Request, response: Response,
             # get original results
             #
             db_original = dbs.get_database(release, species, request.app.state.dbs_dict)
-            results_original = search(db_original, term, False)
+            results_original = searchdb.search(db_original, term, exact)
 
             ret['meta'] = meta.db_meta(db_original)
 
@@ -691,45 +691,46 @@ async def search(request: Request, response: Response,
             # query the original db by ensembl_ids
             # # non existant ensembl_ids disappear
             #
-            genes = genesdb.get(db_original, ldiff)
+            if len(ldiff) > 0:
+                genes = genesdb.get(db_original, ldiff)
 
-            for eid in genes:
-                v = genes[eid]
+                for eid in genes:
+                    v = genes[eid]
 
-                match = Match()
-                match.ensembl_gene_id = eid
-                match.ensembl_version = v['ensembl_version']
-                match.species = v['species_id']
-                match.symbol = v['symbol']
+                    match = Match()
+                    match.ensembl_gene_id = eid
+                    match.ensembl_version = v['ensembl_version']
+                    match.species = v['species_id']
+                    match.symbol = v['symbol']
 
-                name = v.get('name', None)
-                if name:
-                    match.name = name
+                    name = v.get('name', None)
+                    if name:
+                        match.name = name
 
-                external_ids = v.get('external_ids', None)
-                if external_ids:
-                    match.external_ids = external_ids
+                    external_ids = v.get('external_ids', None)
+                    if external_ids:
+                        match.external_ids = external_ids
 
-                homolog_ids = v.get('homolog_ids', None)
-                if homolog_ids:
-                    match.homolog_ids = homolog_ids
+                    homolog_ids = v.get('homolog_ids', None)
+                    if homolog_ids:
+                        match.homolog_ids = homolog_ids
 
-                synonyms = v.get('synonyms', None)
-                if synonyms:
-                    match.synonyms = synonyms
+                    synonyms = v.get('synonyms', None)
+                    if synonyms:
+                        match.synonyms = synonyms
 
-                match.chromosome = v['chromosome']
-                match.position_start = v['start']
-                match.position_end = v['end']
-                match.strand = v['strand']
-                match.match_reason = f'Greedy:{dict_greedy[eid].match_reason}'
-                match.match_value = dict_greedy[eid].match_value
-                match.score = dict_greedy[eid].score
+                    match.chromosome = v['chromosome']
+                    match.position_start = v['start']
+                    match.position_end = v['end']
+                    match.strand = v['strand']
+                    match.match_reason = f'Greedy:{dict_greedy[eid].match_reason}'
+                    match.match_value = dict_greedy[eid].match_value
+                    match.score = dict_greedy[eid].score
 
-                results_combined[eid] = match.dict()
+                    results_combined[eid] = match.dict()
 
-            if len(results_combined.keys()) == 0:
-                raise Exception(f'No results found for: {term}')
+                if len(results_combined.keys()) == 0:
+                    raise Exception(f'No results found for: {term}')
 
             res = list(results_combined.values())
 
@@ -746,8 +747,7 @@ async def search(request: Request, response: Response,
     except Exception as e:
         # TODO: better handling and logging
         # response.status_code = status.HTTP_404_NOT_FOUND
-        print(str(e))
-
+        print('Exception=', str(e))
 
     return CustomORJSONResponse(ret)
 
