@@ -1,6 +1,6 @@
 FROM tiangolo/uvicorn-gunicorn-fastapi:python3.8
 LABEL maintainer="Matthew Vincent <mattjvincent@gmail.com>" \
-	  version="1.0.0"
+	  version="1.0.1"
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt

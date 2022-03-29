@@ -21,7 +21,7 @@ if not on_rtd:
 
 setup(
     name='ensimpl',
-    version='1.0.0',
+    version='1.0.1',
     description="Ensembl tools",
     long_description=readme,
     author="Matthew Vincent",
